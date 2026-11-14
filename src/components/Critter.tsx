@@ -22,8 +22,8 @@ export const RISO = {
 
 // ── Faces ────────────────────────────────────────────────────
 
-type Eyes = 'dot' | 'happy' | 'closed' | 'sad' | 'heavy' | 'half' | 'wide' | 'worried' | 'wink'
-type Mouth = 'frown' | 'slightFrown' | 'flat' | 'softSmile' | 'smallSmile' | 'smile' | 'grin' | 'wobbly' | 'wavy'
+type Eyes = 'dot' | 'happy' | 'closed' | 'sad' | 'heavy' | 'half' | 'wide' | 'worried' | 'wink' | 'shades'
+type Mouth = 'frown' | 'slightFrown' | 'flat' | 'softSmile' | 'smallSmile' | 'smile' | 'grin' | 'wobbly' | 'wavy' | 'yum'
 type Extra = 'cheeks' | 'sparkle' | 'sweat'
 
 export interface Face {
@@ -70,11 +70,15 @@ export const FACES: Record<'mood' | 'anxiety' | 'energy' | 'sleep', Record<1 | 2
   },
 }
 
-const LOGGED_HAPPY: Face = { eyes: 'dot', mouth: 'smile', extras: ['cheeks'] }
+/** Food once logged: 😋 */
+const FOOD_LOGGED: Face = { eyes: 'happy', mouth: 'yum', extras: ['cheeks'] }
+/** Meds once logged: too cool */
+const MEDS_LOGGED: Face = { eyes: 'shades', mouth: 'smile' }
 const SLEEP_WAITING: Face = { eyes: 'wink', mouth: 'flat' }
 
 export function faceFor(type: CritterType, score: number | null, logged: boolean): Face {
-  if (type === 'food' || type === 'meds') return logged ? LOGGED_HAPPY : NEUTRAL
+  if (type === 'food') return logged ? FOOD_LOGGED : NEUTRAL
+  if (type === 'meds') return logged ? MEDS_LOGGED : NEUTRAL
   if (type === 'sleep' && !logged) return SLEEP_WAITING
   if (!logged || score === null || score < 1) return NEUTRAL
   return FACES[type][Math.min(5, Math.round(score)) as 1 | 2 | 3 | 4 | 5]
@@ -177,6 +181,15 @@ function eyes(kind: Eyes, cx: number, cy: number, c: string, highlight: string):
         <path key={'lid' + x} d={`M${x - 7} ${y - 2} h14`} {...stroke} />,
         <circle key={'p' + x} cx={x} cy={y + 2} r={4} fill={c} />,
       ])
+    case 'shades': // sunglasses
+      return (
+        <g key="shades">
+          <path d={`M${L - 12} ${y - 5} H${R + 12}`} stroke={c} strokeWidth={3} strokeLinecap="round" />
+          <rect x={L - 12} y={y - 6} width={23} height={13} rx={6} fill={c} />
+          <rect x={R - 11} y={y - 6} width={23} height={13} rx={6} fill={c} />
+          <path d={`M${L - 7} ${y - 2} l4 -2 M${R - 6} ${y - 2} l4 -2`} stroke={RISO.paper} strokeWidth={2} strokeLinecap="round" />
+        </g>
+      )
     case 'wide':
       return [L, R].flatMap((x) => [
         <circle key={'w' + x} cx={x} cy={y} r={8} fill={RISO.paper} stroke={c} strokeWidth={2.5} />,
@@ -203,6 +216,13 @@ function mouth(kind: Mouth, cx: number, cy: number, c: string): ReactNode {
       return <path d={`M${cx - 13} ${y - 3} Q${cx} ${y + 9} ${cx + 13} ${y - 3}`} {...s} />
     case 'grin':
       return <path d={`M${cx - 14} ${y - 4} Q${cx} ${y + 14} ${cx + 14} ${y - 4} Z`} fill={c} stroke={c} strokeWidth={2} strokeLinejoin="round" />
+    case 'yum': // smile with the tongue poking out at one side
+      return (
+        <g>
+          <path d={`M${cx + 1} ${y + 3} q4 13 12 3 q-1 -5 -4 -6 Z`} fill={RISO.pink} stroke={c} strokeWidth={2} strokeLinejoin="round" />
+          <path d={`M${cx - 13} ${y - 3} Q${cx} ${y + 9} ${cx + 13} ${y - 3}`} {...s} />
+        </g>
+      )
     case 'wobbly':
       return <path d={`M${cx - 12} ${y} q3 -3 6 0 q3 3 6 0 q3 -3 6 0 q3 3 6 0`} {...s} strokeWidth={3} />
     case 'wavy':

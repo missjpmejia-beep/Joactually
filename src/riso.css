@@ -326,8 +326,12 @@
   :root.riso:not([data-theme='light']) .critter .ink2 { opacity: var(--ink2-dark); }
 }
 :root.riso[data-theme='dark'] .critter .ink2 { opacity: var(--ink2-dark); }
-/* Meds' pink half stays soft in both modes so the face shows */
+/* Meds' pink half: soft overprint in light, solid pink in dark */
 .critter .ink2.meds-half { opacity: 0.4 !important; }
+@media (prefers-color-scheme: dark) {
+  :root.riso:not([data-theme='light']) .critter .ink2.meds-half { opacity: 0.9 !important; }
+}
+:root.riso[data-theme='dark'] .critter .ink2.meds-half { opacity: 0.9 !important; }
 .r-label { font-size: 19px; font-weight: 800; overflow-wrap: break-word; min-width: 0; }
 .r-label.small { font-size: 16px; }
 .r-label.grow { flex: 1; }
