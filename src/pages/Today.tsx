@@ -10,8 +10,17 @@ import { EntryEditor } from '../components/EntryEditor'
 import { NoteSheet } from '../components/NoteSheet'
 import { EventSheet } from '../components/EventSheet'
 import { SleepSheet } from '../components/SleepSheet'
+import { KindIcon, Tick } from '../components/Icons'
 
 const MEDS_OPEN_KEY = 'joactually.medsOpen'
+
+function greeting(): string {
+  const h = Number(timeOf(new Date()).slice(0, 2))
+  if (h < 5) return 'Still up, Jo?'
+  if (h < 12) return 'Good morning, Jo'
+  if (h < 18) return 'Good afternoon, Jo'
+  return 'Good evening, Jo'
+}
 
 export function Today() {
   const { items, itemsLoaded, itemsError, itemsById, showToast, entriesChanged, entriesVersion } = useApp()
@@ -23,6 +32,7 @@ export function Today() {
   const [editing, setEditing] = useState<Entry | null>(null)
   const [noting, setNoting] = useState<Entry | null>(null)
   const [freshId, setFreshId] = useState<string | null>(null)
+  const [poppedItem, setPoppedItem] = useState<string | null>(null)
 
   // Roll over to a new day if the app is left open past midnight
   useEffect(() => {
@@ -77,6 +87,8 @@ export function Today() {
     const item = itemsById.get(entry.item_id)
     const kind = item ? kindOf(item) : 'rating'
     setFreshId(entry.id)
+    setPoppedItem(item && kindOf(item) === 'medication' ? 'medication-group' : entry.item_id)
+    window.setTimeout(() => setPoppedItem(null), 700)
     entriesChanged()
     const what =
       kind === 'rating'
@@ -143,7 +155,8 @@ export function Today() {
         <span className="brand">Jo, Actually.</span>
         <span className="muted">{longDay(today)}</span>
       </header>
-      <h1>What would you like to log?</h1>
+      <h1 className="greeting">{greeting()}</h1>
+      <p className="lede">What would you like to log?</p>
 
       {itemsError && <p className="error">Couldn’t load your items: {itemsError}</p>}
       {loadError && <p className="error">Couldn’t load today’s entries: {loadError}</p>}
@@ -160,13 +173,20 @@ export function Today() {
             if (item.id !== meds[0].id) return null
             const logged = meds.filter((m) => lastFor(m)).length
             return (
-              <div key="medication-group" className={'med-group' + (medsOpen ? ' open' : '')}>
+              <div
+                key="medication-group"
+                className={'med-group' + (medsOpen ? ' open' : '') + (poppedItem === 'medication-group' ? ' pop' : '')}
+              >
                 <button
                   type="button"
                   className="med-head"
                   aria-expanded={medsOpen}
                   onClick={() => toggleMeds(!medsOpen)}
                 >
+                  <span className="card-top">
+                    <KindIcon kind="medication" />
+                    {loadedDay === today && logged === meds.length && <Tick />}
+                  </span>
                   <span className="log-card-name">Medication</span>
                   <span className="log-card-sub">
                     {loadedDay !== today ? '\u00a0' : logged === 0 ? 'None logged yet today' : `${logged} of ${meds.length} logged today`}
@@ -179,7 +199,10 @@ export function Today() {
                   <div className="med-list">
                     {meds.map((m) => (
                       <button key={m.id} type="button" className="med-btn" onClick={() => void tap(m)}>
-                        <span className="med-name">{m.name}</span>
+                        <span className="med-name">
+                          {m.name}
+                          {loadedDay === today && lastFor(m) && <Tick />}
+                        </span>
                         <span className="log-card-sub">{cardStatus(m)}</span>
                       </button>
                     ))}
@@ -189,7 +212,16 @@ export function Today() {
             )
           }
           return (
-            <button key={item.id} type="button" className={`log-card kind-${kind}`} onClick={() => void tap(item)}>
+            <button
+              key={item.id}
+              type="button"
+              className={`log-card kind-${kind}` + (poppedItem === item.id ? ' pop' : '')}
+              onClick={() => void tap(item)}
+            >
+              <span className="card-top">
+                <KindIcon kind={kind} />
+                {loadedDay === today && lastFor(item) && <Tick />}
+              </span>
               <span className="log-card-name">{item.name}</span>
               <span className="log-card-sub">{cardStatus(item)}</span>
             </button>

@@ -25,13 +25,19 @@ export function RatingOptions({
             disabled={disabled}
             onClick={() => onPick(v)}
           >
-            <span className="rating-num">{v}</span>
+            <span className={`rating-num tone-${tone(item, v)}`}>{v}</span>
             <span className="rating-words">{words ?? (v === 0 ? 'None' : '')}</span>
           </button>
         )
       })}
     </div>
   )
+}
+
+/** 0–5 intensity for the number's tint: 0 = calm/none, 5 = most intense. */
+function tone(item: TrackedItem, v: number): number {
+  if (v === 0) return 0
+  return item.direction === 'higher_is_better' ? 6 - v : v
 }
 
 export function directionHint(item: TrackedItem): string {
