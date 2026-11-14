@@ -13,6 +13,7 @@ export function Today() {
   const { items, itemsLoaded, itemsError, itemsById, showToast, entriesChanged, entriesVersion } = useApp()
   const [today, setToday] = useState(todayKey())
   const [entries, setEntries] = useState<Entry[]>([])
+  const [loadedDay, setLoadedDay] = useState<string | null>(null)
   const [loadError, setLoadError] = useState<string | null>(null)
   const [picking, setPicking] = useState<TrackedItem | null>(null)
   const [editing, setEditing] = useState<Entry | null>(null)
@@ -36,6 +37,7 @@ export function Today() {
       .then((list) => {
         if (!cancelled) {
           setEntries(list)
+          setLoadedDay(today)
           setLoadError(null)
         }
       })
@@ -92,7 +94,9 @@ export function Today() {
             <button key={item.id} type="button" className="log-card" onClick={() => setPicking(item)}>
               <span className="log-card-name">{item.name}</span>
               <span className="log-card-sub">
-                {last
+                {loadedDay !== today
+                  ? '\u00a0'
+                  : last
                   ? `Last: ${last.value === 0 ? 'None' : last.value} at ${timeOf(last.occurred_at)}`
                   : 'Not logged yet today'}
               </span>
