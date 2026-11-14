@@ -1,1 +1,32 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" rx="14" fill="#8a5a33"/><text x="32" y="45" font-family="Georgia, serif" font-size="38" font-weight="700" text-anchor="middle" fill="#f5f1ea">J</text></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <!-- Jo, Actually. app icon: the Mood critter at its happiest, riso style.
+       Everything important sits inside the central 80% so Android can crop it to any shape. -->
+  <defs>
+    <pattern id="dots" width="22" height="22" patternUnits="userSpaceOnUse">
+      <circle cx="11" cy="11" r="3" fill="#0078BF" opacity="0.13"/>
+    </pattern>
+  </defs>
+  <rect width="512" height="512" fill="#F7F1E5"/>
+  <rect width="512" height="512" fill="url(#dots)"/>
+
+  <!-- overlapping circles bleeding off the top-right corner -->
+  <circle cx="490" cy="30" r="135" fill="#FFE800" style="mix-blend-mode:multiply"/>
+  <circle cx="510" cy="54" r="135" fill="#FF48B0" opacity="0.55" style="mix-blend-mode:multiply"/>
+
+  <g transform="translate(250 270) scale(3.3) translate(-60 -52)">
+    <!-- second ink underneath, misregistered -->
+    <path transform="translate(5 4)" opacity="0.9" fill="#FFE800"
+      d="M60 8 C88 6 106 26 104 52 C102 80 82 94 58 94 C30 94 14 78 16 50 C18 24 34 10 60 8 Z"/>
+    <path fill="#FF48B0"
+      d="M60 8 C88 6 106 26 104 52 C102 80 82 94 58 94 C30 94 14 78 16 50 C18 24 34 10 60 8 Z"/>
+    <!-- cheeks -->
+    <ellipse cx="35" cy="60" rx="7" ry="4" fill="#FF6C2F" opacity="0.6"/>
+    <ellipse cx="85" cy="60" rx="7" ry="4" fill="#FF6C2F" opacity="0.6"/>
+    <!-- happy closed eyes -->
+    <path d="M39 48 Q45 40 51 48 M69 48 Q75 40 81 48" fill="none" stroke="#1F2A5C" stroke-width="3.5" stroke-linecap="round"/>
+    <!-- big grin -->
+    <path d="M46 60 Q60 78 74 60 Z" fill="#1F2A5C" stroke="#1F2A5C" stroke-width="2" stroke-linejoin="round"/>
+    <!-- sparkle -->
+    <path d="M100 6 L103 14 L111 17 L103 20 L100 28 L97 20 L89 17 L97 14 Z" fill="#FFE800" stroke="#1F2A5C" stroke-width="1.6" stroke-linejoin="round"/>
+  </g>
+</svg>
