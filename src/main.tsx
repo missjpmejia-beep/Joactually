@@ -2,10 +2,10 @@ import { StrictMode, useEffect, useState } from 'react'
 import { createRoot } from 'react-dom/client'
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import type { Session } from '@supabase/supabase-js'
-import '@fontsource/dm-sans/400.css'
-import '@fontsource/dm-sans/500.css'
-import '@fontsource/dm-sans/700.css'
+import '@fontsource/bagel-fat-one/latin-400.css'
+import '@fontsource-variable/rubik/wght.css'
 import './styles.css'
+import './riso.css'
 import { configured, supabase } from './lib/supabase'
 import { applyTheme, getTheme } from './lib/theme'
 import { AppProvider } from './lib/app'
@@ -17,6 +17,7 @@ import { Patterns } from './pages/Patterns'
 import { Settings } from './pages/Settings'
 import { CritterSheet } from './pages/CritterSheet'
 
+document.documentElement.classList.add('riso')
 applyTheme(getTheme())
 
 function App() {

@@ -264,20 +264,28 @@ export function Critter({
   const body = CRITTERS[type]
   const face = faceFor(type, score, logged)
   const faded = !logged && type !== 'sleep' && type !== 'food' && type !== 'meds'
-  const blend = { mixBlendMode: body.blend ?? 'multiply' } as const
+  // Light mode overprints like real riso (multiply); dark mode sets --critter-blend to screen
+  const blend = { mixBlendMode: (body.blend ?? 'var(--critter-blend, multiply)') as 'multiply' }
   return (
     <svg
-      className="critter"
+      className={'critter' + (faded ? ' faded' : '')}
       viewBox="0 0 120 100"
       width={size}
       height={(size * 100) / 120}
       {...(label ? { role: 'img', 'aria-label': label } : { 'aria-hidden': true })}
-      style={{ opacity: faded ? 0.4 : 1, overflow: 'visible' }}
+      style={{ overflow: 'visible' }}
     >
+      {/* Second ink prints underneath, offset, so it shows as a misregistered edge */}
+      {body.ink2Opacity > 0 && type !== 'meds' && (
+        <g className="ink2" style={blend} opacity={body.ink2Opacity} transform={`translate(${body.offset[0]} ${body.offset[1]})`}>
+          {body.shape(body.ink2)}
+        </g>
+      )}
       <g style={blend}>{body.shape(body.ink1)}</g>
-      {body.ink2Opacity > 0 && (
-        <g style={blend} opacity={body.ink2Opacity} transform={`translate(${body.offset[0]} ${body.offset[1]})`}>
-          {type === 'meds' ? <path d="M60 30 h27 a25 25 0 0 1 0 50 h-27 z" fill={body.ink2} /> : body.shape(body.ink2)}
+      {/* The capsule's second colour is its other half, printed on top */}
+      {type === 'meds' && (
+        <g className="ink2 meds-half" style={blend} opacity={body.ink2Opacity}>
+          <path d="M60 30 h27 a25 25 0 0 1 0 50 h-27 z" fill={body.ink2} />
         </g>
       )}
       {type === 'energy' && battery(score, logged)}

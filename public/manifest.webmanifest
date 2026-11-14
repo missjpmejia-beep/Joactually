@@ -3,7 +3,7 @@
   "short_name": "Jo, Actually.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#f5f1ea",
-  "theme_color": "#f5f1ea",
+  "background_color": "#F7F1E5",
+  "theme_color": "#F7F1E5",
   "icons": [{ "src": "/favicon.svg", "sizes": "any", "type": "image/svg+xml" }]
 }

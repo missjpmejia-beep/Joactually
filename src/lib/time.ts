@@ -102,3 +102,10 @@ export function dayHeading(key: string): string {
   if (key === addDays(today, -1)) return `Yesterday · ${short}`
   return short
 }
+
+const chipFmt = new Intl.DateTimeFormat('en-GB', { timeZone: 'UTC', weekday: 'short', day: 'numeric', month: 'short' })
+
+/** "SAT 14 NOV" */
+export function dateChip(key: string): string {
+  return chipFmt.format(keyToDate(key)).replace(',', '').toUpperCase()
+}

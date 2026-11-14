@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react'
 import { useApp } from '../lib/app'
 import { addEntry, addRating, deleteEntry, fetchEntries } from '../lib/data'
-import { dayKey, londonToUtc, longDay, timeOf, todayKey } from '../lib/time'
-import { describeValue, formatAmount, formatDuration, kindOf, type Entry, type TrackedItem } from '../lib/types'
+import { dateChip, dayKey, londonToUtc, longDay, timeOf, todayKey } from '../lib/time'
+import { describeValue, formatAmount, formatDuration, kindOf, labelFor, type Entry, type TrackedItem } from '../lib/types'
 import { RatingOptions, directionHint } from '../components/RatingOptions'
 import { Sheet } from '../components/Sheet'
 import { EntryList } from '../components/EntryList'
@@ -10,17 +10,10 @@ import { EntryEditor } from '../components/EntryEditor'
 import { NoteSheet } from '../components/NoteSheet'
 import { EventSheet } from '../components/EventSheet'
 import { SleepSheet } from '../components/SleepSheet'
-import { KindIcon, Tick } from '../components/Icons'
+import { Critter } from '../components/Critter'
+import { bubbleCopy, critterFor, CRITTER_COLOUR } from '../lib/critters'
 
 const MEDS_OPEN_KEY = 'joactually.medsOpen'
-
-function greeting(): string {
-  const h = Number(timeOf(new Date()).slice(0, 2))
-  if (h < 5) return 'Still up, Jo?'
-  if (h < 12) return 'Good morning, Jo'
-  if (h < 18) return 'Good afternoon, Jo'
-  return 'Good evening, Jo'
-}
 
 export function Today() {
   const { items, itemsLoaded, itemsError, itemsById, showToast, entriesChanged, entriesVersion } = useApp()
@@ -149,85 +142,154 @@ export function Today() {
     return `Last: ${at}`
   }
 
+  const loaded = loadedDay === today
+  const hour = Number(timeOf(new Date()).slice(0, 2))
+  const isLogged = (i: TrackedItem) => Boolean(lastFor(i))
+  const moodItem = shown.find((i) => critterFor(i) === 'mood' && i.name.trim().toLowerCase() === 'mood') ??
+    shown.find((i) => i.type === 'rating')
+  const moodLast = moodItem ? lastFor(moodItem) : undefined
+  const tiles = shown.filter((i) => kindOf(i) === 'rating' || kindOf(i) === 'event')
+
+  function tile(item: TrackedItem) {
+    const kind = kindOf(item)
+    const type = critterFor(item)
+    const last = lastFor(item)
+    const logged = loaded && Boolean(last)
+    const colour = CRITTER_COLOUR[type]
+    const at = last ? timeOf(last.occurred_at) : ''
+    let right: React.ReactNode = null
+    let sub = loaded ? 'Tap to log' : '\u00a0'
+    let aria = `${item.name}, not logged today, tap to log`
+    if (kind === 'rating' && logged && last) {
+      const words = last.value === 0 ? 'None' : labelFor(item, last.value ?? 0)
+      right = <span className={`r-score display c-${colour}`}>{last.value === 0 ? 'None' : `${last.value}/5`}</span>
+      sub = [words, at].filter(Boolean).join(' · ')
+      aria = `${item.name}, ${last.value === 0 ? 'none' : `${last.value} out of 5`}, logged ${at}`
+    } else if (kind === 'event') {
+      right = logged ? <span className="r-pill done">{item.name === 'Meal' ? 'Fed' : 'Done'}</span> : <span className="r-pill">Log</span>
+      if (logged && last) {
+        sub = `${last.description || (item.name === 'Meal' ? 'Last bite' : 'Last')} · ${at}`
+        aria = `${item.name}, logged ${at}`
+      }
+    }
+    return (
+      <button
+        key={item.id}
+        type="button"
+        className={`r-tile s-${colour}` + (poppedItem === item.id ? ' pop' : '')}
+        aria-label={aria}
+        onClick={() => void tap(item)}
+      >
+        <Critter type={type} score={kind === 'rating' ? (last?.value ?? null) : null} logged={logged} size={150} />
+        <span className="r-tile-head">
+          <span className="r-label">{item.name}</span>
+          {right}
+        </span>
+        <span className="r-sub">{sub}</span>
+      </button>
+    )
+  }
+
+  function sleepCard(item: TrackedItem) {
+    const last = lastFor(item)
+    const logged = loaded && Boolean(last?.start_at && last?.end_at)
+    const dur = logged && last?.start_at && last?.end_at ? formatDuration(last.start_at, last.end_at) : ''
+    const sub = !loaded ? '\u00a0' : logged ? `Last night: ${dur}${last?.quality ? ` · quality ${last.quality}/5` : ''}` : 'This one’s still waiting for you'
+    return (
+      <button
+        key={item.id}
+        type="button"
+        className={'r-sleep' + (poppedItem === item.id ? ' pop' : '')}
+        aria-label={logged ? `${item.name}, ${dur}, logged` : `${item.name}, not logged today, tap to log`}
+        onClick={() => void tap(item)}
+      >
+        <Critter type="sleep" score={last?.quality ?? null} logged={logged} size={84} />
+        <span className="r-wide-text">
+          <span className="r-label">{item.name}</span>
+          <span className="r-sub">{sub}</span>
+        </span>
+        <span className={'r-stamp display' + (logged ? ' done' : '')}>{logged ? 'Done' : 'Log'}</span>
+      </button>
+    )
+  }
+
+  function medsCard() {
+    const loggedMeds = meds.filter((m) => lastFor(m))
+    const allLogged = loaded && loggedMeds.length === meds.length
+    const allTaken = allLogged && loggedMeds.every((m) => lastFor(m)?.status === 'taken')
+    const pill = !loaded ? null : allTaken ? 'All taken' : allLogged ? 'All logged' : loggedMeds.length ? `${loggedMeds.length} of ${meds.length}` : 'Log'
+    return (
+      <div key="medication-group" className={'r-meds' + (medsOpen ? ' open' : '') + (poppedItem === 'medication-group' ? ' pop' : '')}>
+        <button
+          type="button"
+          className="r-meds-head"
+          aria-expanded={medsOpen}
+          aria-label={`Medication, ${loggedMeds.length} of ${meds.length} logged today, ${medsOpen ? 'hide' : 'show'} list`}
+          onClick={() => toggleMeds(!medsOpen)}
+        >
+          <Critter type="meds" score={null} logged={allLogged} size={72} />
+          <span className="r-label grow">Meds</span>
+          {pill && <span className={'r-pill' + (allLogged ? ' done' : '')}>{pill}</span>}
+          <svg className="chevron" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M6 9l6 6 6-6" />
+          </svg>
+        </button>
+        {medsOpen && (
+          <div className="r-med-list">
+            {meds.map((m) => (
+              <button
+                key={m.id}
+                type="button"
+                className="r-med"
+                aria-label={`${m.name}, ${cardStatus(m)}, tap to log usual dose`}
+                onClick={() => void tap(m)}
+              >
+                <span className="r-label small">{m.name}</span>
+                <span className="r-sub">{cardStatus(m)}</span>
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+    )
+  }
+
   return (
-    <div className="page">
-      <header className="page-top">
-        <span className="brand">Jo, Actually.</span>
-        <span className="muted">{longDay(today)}</span>
+    <div className="page r-today">
+      <svg className="r-blobs" aria-hidden="true" viewBox="0 0 180 180">
+        <circle cx="90" cy="90" r="80" fill="#FFE800" />
+        <circle cx="100" cy="98" r="80" fill="#FF48B0" opacity="0.55" />
+      </svg>
+      <header className="r-header">
+        <span className="logo">Jo, Actually.</span>
+        <span className="r-date">{dateChip(today)}</span>
       </header>
-      <h1 className="greeting">{greeting()}</h1>
-      <p className="lede">What would you like to log?</p>
+
+      <div className="r-hero">
+        <Critter
+          type="mood"
+          score={moodLast?.value ?? null}
+          logged={loaded && Boolean(moodLast)}
+          size={112}
+          label={
+            moodLast && moodItem
+              ? `Your mood critter, showing ${moodItem.name.toLowerCase()} ${moodLast.value} out of 5`
+              : 'Your mood critter, waiting for today’s first entry'
+          }
+        />
+        <p className="r-bubble">{loaded ? bubbleCopy(hour, shown, isLogged) : '\u00a0'}</p>
+      </div>
 
       {itemsError && <p className="error">Couldn’t load your items: {itemsError}</p>}
       {loadError && <p className="error">Couldn’t load today’s entries: {loadError}</p>}
-
       {itemsLoaded && shown.length === 0 && !itemsError && (
         <p className="empty-box">Nothing to show. Add or unhide items in Settings.</p>
       )}
 
-      <div className="card-grid">
-        {shown.map((item) => {
-          const kind = kindOf(item)
-          if (kind === 'medication') {
-            // All medications live in one box, placed where the first one sits in the order
-            if (item.id !== meds[0].id) return null
-            const logged = meds.filter((m) => lastFor(m)).length
-            return (
-              <div
-                key="medication-group"
-                className={'med-group' + (medsOpen ? ' open' : '') + (poppedItem === 'medication-group' ? ' pop' : '')}
-              >
-                <button
-                  type="button"
-                  className="med-head"
-                  aria-expanded={medsOpen}
-                  onClick={() => toggleMeds(!medsOpen)}
-                >
-                  <span className="card-top">
-                    <KindIcon kind="medication" />
-                    {loadedDay === today && logged === meds.length && <Tick />}
-                  </span>
-                  <span className="log-card-name">Medication</span>
-                  <span className="log-card-sub">
-                    {loadedDay !== today ? '\u00a0' : logged === 0 ? 'None logged yet today' : `${logged} of ${meds.length} logged today`}
-                  </span>
-                  <svg className="chevron" viewBox="0 0 24 24" aria-hidden="true">
-                    <path d="M6 9l6 6 6-6" />
-                  </svg>
-                </button>
-                {medsOpen && (
-                  <div className="med-list">
-                    {meds.map((m) => (
-                      <button key={m.id} type="button" className="med-btn" onClick={() => void tap(m)}>
-                        <span className="med-name">
-                          {m.name}
-                          {loadedDay === today && lastFor(m) && <Tick />}
-                        </span>
-                        <span className="log-card-sub">{cardStatus(m)}</span>
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )
-          }
-          return (
-            <button
-              key={item.id}
-              type="button"
-              className={`log-card kind-${kind}` + (poppedItem === item.id ? ' pop' : '')}
-              onClick={() => void tap(item)}
-            >
-              <span className="card-top">
-                <KindIcon kind={kind} />
-                {loadedDay === today && lastFor(item) && <Tick />}
-              </span>
-              <span className="log-card-name">{item.name}</span>
-              <span className="log-card-sub">{cardStatus(item)}</span>
-            </button>
-          )
-        })}
-      </div>
+      <div className="r-grid">{tiles.map(tile)}</div>
+
+      {shown.filter((i) => kindOf(i) === 'sleep').map(sleepCard)}
+      {meds.length > 0 && medsCard()}
 
       {entries.length > 0 && (
         <section>

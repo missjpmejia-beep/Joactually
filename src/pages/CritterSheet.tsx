@@ -1,6 +1,3 @@
-import '@fontsource/bagel-fat-one/latin-400.css'
-import '@fontsource-variable/rubik/wght.css'
-import '../riso.css'
 import { Critter, type CritterType } from '../components/Critter'
 
 const ROWS: { type: CritterType; title: string; note: string; scored: boolean; shadow: string }[] = [
@@ -15,8 +12,7 @@ const ROWS: { type: CritterType; title: string; note: string; scored: boolean; s
 /** A test sheet showing every critter at every score, for Jo to approve. */
 export function CritterSheet() {
   return (
-    <div className="riso">
-      <div className="critter-sheet">
+    <div className="critter-sheet">
         <span className="logo">Jo, Actually.</span>
         <h1>Critter test sheet</h1>
         <p className="intro">Every critter at every score. Faded = not logged today.</p>
@@ -24,7 +20,7 @@ export function CritterSheet() {
           <section
             key={r.type}
             className={'r-card critter-row' + (r.type === 'sleep' ? ' dark' : '')}
-            style={{ ['--shadow' as string]: r.shadow }}
+            style={{ ['--hard' as string]: r.shadow }}
           >
             <h2>{r.title}</h2>
             <p>{r.note}</p>
@@ -49,7 +45,6 @@ export function CritterSheet() {
             </div>
           </section>
         ))}
-      </div>
     </div>
   )
 }
