@@ -1,6 +1,8 @@
 import { useApp } from '../lib/app'
 import { timeOf } from '../lib/time'
 import { describeValue, type Entry } from '../lib/types'
+import { entryCritter } from '../lib/critters'
+import { Critter } from './Critter'
 
 export function EntryList({
   entries,
@@ -24,6 +26,9 @@ export function EntryList({
               onClick={() => onOpen(e)}
             >
               <span className="entry-time">{timeOf(e.occurred_at)}</span>
+              <span className="entry-critter">
+                <Critter {...entryCritter(item, e)} size={34} />
+              </span>
               <span className="entry-main">
                 <span className="entry-name">{item?.name ?? 'Unknown'}</span>
                 {e.note && <span className="entry-note">Note: {e.note}</span>}

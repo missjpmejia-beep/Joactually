@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { supabase } from '../lib/supabase'
+import { Critter } from '../components/Critter'
 
 export function Login() {
   const [email, setEmail] = useState('')
@@ -35,7 +36,10 @@ export function Login() {
   return (
     <div className="login">
       <form className="login-card" onSubmit={signIn}>
-        <h1 className="brand big">Jo, Actually.</h1>
+        <div className="login-hero">
+          <Critter type="mood" score={4} size={84} />
+          <h1 className="logo">Jo, Actually.</h1>
+        </div>
         <label className="field">
           <span>Email</span>
           <input type="email" autoComplete="username" required value={email} onChange={(e) => setEmail(e.target.value)} />
@@ -81,7 +85,10 @@ export function SetNewPassword({ onDone }: { onDone: () => void }) {
   return (
     <div className="login">
       <form className="login-card" onSubmit={save}>
-        <h1 className="brand big">Jo, Actually.</h1>
+        <div className="login-hero">
+          <Critter type="mood" score={4} size={84} />
+          <h1 className="logo">Jo, Actually.</h1>
+        </div>
         <p>Choose a new password.</p>
         <label className="field">
           <span>New password</span>

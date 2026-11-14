@@ -98,7 +98,7 @@ interface Body {
   /** where the face sits */
   cx: number
   cy: number
-  blend?: 'multiply' | 'screen'
+  blend?: 'multiply' | 'screen' | 'normal'
 }
 
 const blob = 'M60 8 C88 6 106 26 104 52 C102 80 82 94 58 94 C30 94 14 78 16 50 C18 24 34 10 60 8 Z'
@@ -123,7 +123,7 @@ export const CRITTERS: Record<CritterType, Body> = {
     shape: (f) => <path d="M16 46 h88 a44 44 0 0 1 -88 0 z" fill={f} />, faceInk: RISO.ink, cx: 60, cy: 62,
   },
   sleep: {
-    ink1: RISO.lilac, ink2: RISO.lilac, ink2Opacity: 0, offset: [0, 0], blend: 'screen',
+    ink1: RISO.lilac, ink2: RISO.lilac, ink2Opacity: 0, offset: [0, 0], blend: 'normal',
     shape: (f) => <path d={cloud} fill={f} />, faceInk: RISO.ink, cx: 60, cy: 56,
   },
   meds: {

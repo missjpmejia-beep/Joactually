@@ -6,6 +6,8 @@ import { getTheme, setTheme, type ThemeChoice } from '../lib/theme'
 import { formatAmount, kindOf, type Direction, type ItemKind, type TrackedItem } from '../lib/types'
 import { Sheet } from '../components/Sheet'
 import { MyData } from './MyData'
+import { Critter } from '../components/Critter'
+import { sampleCritter } from '../lib/critters'
 
 const KIND_LABEL: Record<ItemKind, string> = {
   rating: 'Rating',
@@ -71,14 +73,17 @@ export function Settings() {
 
   return (
     <div className="page">
-      <h1>Settings</h1>
+      <h1><span className="marker">Settings</span></h1>
 
-      <section>
+      <section style={{ ['--hard' as string]: 'var(--riso-pink)' }}>
         <h2 className="section-title">What I track</h2>
         {error && <p className="error">{error}</p>}
         <ul className="card item-list">
           {items.map((item, i) => (
             <li key={item.id} className={'item-row' + (item.shown ? '' : ' is-hidden')}>
+              <span className="item-critter">
+                <Critter {...sampleCritter(item)} size={44} />
+              </span>
               <div className="item-info">
                 <span className="item-name">
                   {item.name} <span className="kind-tag">{KIND_LABEL[kindOf(item)]}</span>
@@ -314,7 +319,7 @@ function Appearance() {
     setTheme(c)
   }
   return (
-    <section>
+    <section style={{ ['--hard' as string]: 'var(--riso-yellow)' }}>
       <h2 className="section-title">Appearance</h2>
       <div className="segmented">
         {(['light', 'dark', 'system'] as const).map((c) => (
@@ -348,7 +353,7 @@ function Account() {
   }
 
   return (
-    <section>
+    <section style={{ ['--hard' as string]: 'var(--riso-blue)' }}>
       <h2 className="section-title">Account</h2>
       <form className="card pad" onSubmit={changePassword}>
         <label className="field">

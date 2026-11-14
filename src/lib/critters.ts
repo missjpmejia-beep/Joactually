@@ -52,3 +52,31 @@ export function bubbleCopy(hour: number, shown: TrackedItem[], isLogged: (i: Tra
   const pick = (hour < 12 && waiting.find((i) => kindOf(i) === 'sleep')) || waiting[0]
   return `${open} ${nudge(pick)}`
 }
+
+/** The mini critter for a single entry: its face mirrors that entry. */
+export function entryCritter(item: TrackedItem | undefined, entry: {
+  value: number | null
+  quality: number | null
+  status: string | null
+}): { type: CritterType; score: number | null; logged: boolean } {
+  if (!item) return { type: 'mood', score: null, logged: false }
+  const type = critterFor(item)
+  if (type === 'sleep') return { type, score: entry.quality, logged: true }
+  if (type === 'meds') return { type, score: null, logged: entry.status !== 'missed' }
+  if (type === 'food') return { type, score: null, logged: true }
+  // "None" on a symptom reads as calm
+  return { type, score: entry.value === 0 ? 1 : entry.value, logged: true }
+}
+
+/** A friendly, typical face for an item, used in Settings. */
+export function sampleCritter(item: TrackedItem): { type: CritterType; score: number | null; logged: boolean } {
+  const type = critterFor(item)
+  if (type === 'mood') return { type, score: 4, logged: true }
+  if (type === 'anxiety') return { type, score: 2, logged: true }
+  if (type === 'energy') return { type, score: 4, logged: true }
+  if (type === 'sleep') return { type, score: 4, logged: true }
+  return { type, score: null, logged: true }
+}
+
+/** Shadow colours that cycle down a page. */
+export const SHADOW_CYCLE = ['var(--riso-blue)', 'var(--riso-pink)', 'var(--riso-yellow)', 'var(--riso-green)']

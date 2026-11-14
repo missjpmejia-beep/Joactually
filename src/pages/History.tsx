@@ -5,6 +5,7 @@ import { addDays, dayHeading, dayKey, todayKey } from '../lib/time'
 import type { Entry } from '../lib/types'
 import { EntryList } from '../components/EntryList'
 import { EntryEditor } from '../components/EntryEditor'
+import { SHADOW_CYCLE } from '../lib/critters'
 
 const PAGE_DAYS = 30
 
@@ -64,7 +65,7 @@ export function History() {
 
   return (
     <div className="page">
-      <h1>History</h1>
+      <h1><span className="marker">History</span></h1>
       <label className="field">
         <span>Search notes and meals</span>
         <input
@@ -94,8 +95,8 @@ export function History() {
       {error && <p className="error">{error}</p>}
       {searching && !loading && entries.length === 0 && <p className="empty-box">No notes match “{debounced}”.</p>}
 
-      {groups.map(([k, list]) => (
-        <section key={k}>
+      {groups.map(([k, list], i) => (
+        <section key={k} style={{ ['--hard' as string]: SHADOW_CYCLE[i % SHADOW_CYCLE.length] }}>
           <h2 className="section-title">{dayHeading(k)}</h2>
           {list.length > 0 ? (
             <div className="card">

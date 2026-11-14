@@ -44,7 +44,7 @@ export function MyData() {
     })
 
   return (
-    <section>
+    <section style={{ ['--hard' as string]: 'var(--riso-green)' }}>
       <h2 className="section-title">My data</h2>
       {error && <p className="error">{error}</p>}
 

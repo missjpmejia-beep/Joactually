@@ -480,3 +480,61 @@
 @media (prefers-reduced-motion: reduce) {
   .riso .pop { animation: none; }
 }
+
+/* ── Step 4: the rest of the app ──────────────────────────── */
+:root.riso { --marker: rgba(255, 232, 0, 0.9); }
+@media (prefers-color-scheme: dark) {
+  :root.riso:not([data-theme='light']) { --marker: rgba(255, 72, 176, 0.55); }
+}
+:root.riso[data-theme='dark'] { --marker: rgba(255, 72, 176, 0.55); }
+
+/* Page titles with a highlighter underline */
+.riso .marker {
+  background: linear-gradient(transparent 58%, var(--marker) 58%, var(--marker) 92%, transparent 92%);
+  padding: 0 4px;
+  margin: 0 -4px;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+}
+
+/* Section headings as tilted label chips */
+.riso .section-title {
+  display: inline-block;
+  margin: 22px 0 12px;
+  padding: 4px 10px;
+  font-size: 0.95rem;
+  font-weight: 800;
+  background: var(--surface);
+  border: 2px solid var(--line);
+  border-radius: 10px;
+  box-shadow: 2px 2px 0 var(--hard, var(--riso-yellow));
+  transform: rotate(-1.5deg);
+}
+.riso .sub-title { font-weight: 800; }
+
+/* Entry rows get a mini critter */
+.riso .entry-row { grid-template-columns: 46px 34px minmax(0, 1fr) auto; align-items: center; }
+.entry-critter { display: grid; place-items: center; }
+.entry-critter .critter { width: 34px; height: auto; }
+.riso .entry-name { font-weight: 700; }
+
+/* Settings: each item shows its critter */
+.riso .item-row { flex-wrap: wrap; }
+.item-critter { flex: none; display: grid; place-items: center; width: 48px; }
+.item-critter .critter { width: 44px; height: auto; }
+.riso .item-info { flex: 1 1 140px; }
+.riso .item-actions { width: 100%; justify-content: flex-end; }
+@media (min-width: 520px) { .riso .item-actions { width: auto; } }
+
+/* Patterns placeholder */
+.patterns-empty {
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+  margin-top: 24px;
+}
+.patterns-empty .critter { flex: none; }
+
+/* Login */
+.login-hero { display: flex; align-items: center; gap: 10px; margin-bottom: 18px; }
+.login-hero .logo { margin: 0; font-size: 2rem; }
