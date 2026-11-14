@@ -1,0 +1,38 @@
+import { useApp } from '../lib/app'
+import { timeOf } from '../lib/time'
+import { describeValue, type Entry } from '../lib/types'
+
+export function EntryList({
+  entries,
+  onOpen,
+  highlightId,
+}: {
+  entries: Entry[]
+  onOpen: (e: Entry) => void
+  highlightId?: string | null
+}) {
+  const { itemsById } = useApp()
+  return (
+    <ul className="entry-list">
+      {entries.map((e) => {
+        const item = itemsById.get(e.item_id)
+        return (
+          <li key={e.id}>
+            <button
+              type="button"
+              className={'entry-row' + (e.id === highlightId ? ' fresh' : '')}
+              onClick={() => onOpen(e)}
+            >
+              <span className="entry-time">{timeOf(e.occurred_at)}</span>
+              <span className="entry-main">
+                <span className="entry-name">{item?.name ?? 'Unknown'}</span>
+                {e.note && <span className="entry-note">Note: {e.note}</span>}
+              </span>
+              <span className="entry-value">{describeValue(item, e)}</span>
+            </button>
+          </li>
+        )
+      })}
+    </ul>
+  )
+}
