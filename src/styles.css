@@ -770,7 +770,7 @@ section { margin-bottom: 8px; }
   margin-top: 12px;
 }
 
-.add-row .btn { padding: 12px 6px; }
+.add-row .btn { padding: 12px 4px; white-space: nowrap; font-size: 0.92rem; }
 
 .kind-tag {
   display: inline-block;
