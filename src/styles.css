@@ -796,3 +796,72 @@ section { margin-bottom: 8px; }
 }
 
 .btn.small.danger-text { padding-left: 8px; }
+
+/* Medication box on Today */
+.med-group {
+  grid-column: 1 / -1;
+  background: var(--event-bg);
+  border: 1px solid var(--event-border);
+  border-radius: 18px;
+  overflow: hidden;
+}
+
+.med-head {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  grid-template-rows: auto auto;
+  column-gap: 12px;
+  row-gap: 6px;
+  align-items: center;
+  width: 100%;
+  min-height: 72px;
+  padding: 18px 16px;
+  text-align: left;
+  background: none;
+  border: 0;
+}
+
+.med-head .log-card-sub { grid-column: 1; }
+
+.chevron {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  width: 24px;
+  height: 24px;
+  fill: none;
+  stroke: var(--muted);
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  transition: transform 0.15s;
+}
+
+.med-group.open .chevron { transform: rotate(180deg); }
+
+.med-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  padding: 0 12px 12px;
+}
+
+.med-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  min-height: 72px;
+  padding: 14px;
+  text-align: left;
+  background: var(--surface);
+  border: 1px solid var(--event-border);
+  border-radius: 14px;
+}
+
+.med-btn:active { transform: scale(0.98); }
+
+.med-name {
+  font-weight: 700;
+  font-size: 1.08rem;
+  overflow-wrap: anywhere;
+}

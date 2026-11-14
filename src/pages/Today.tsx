@@ -11,6 +11,8 @@ import { NoteSheet } from '../components/NoteSheet'
 import { EventSheet } from '../components/EventSheet'
 import { SleepSheet } from '../components/SleepSheet'
 
+const MEDS_OPEN_KEY = 'joactually.medsOpen'
+
 export function Today() {
   const { items, itemsLoaded, itemsError, itemsById, showToast, entriesChanged, entriesVersion } = useApp()
   const [today, setToday] = useState(todayKey())
@@ -50,6 +52,22 @@ export function Today() {
   }, [today, entriesVersion])
 
   const shown = items.filter((i) => i.shown)
+  const meds = shown.filter((i) => kindOf(i) === 'medication')
+  const [medsOpen, setMedsOpen] = useState(() => {
+    try {
+      return localStorage.getItem(MEDS_OPEN_KEY) === '1'
+    } catch {
+      return false
+    }
+  })
+  function toggleMeds(open: boolean) {
+    setMedsOpen(open)
+    try {
+      localStorage.setItem(MEDS_OPEN_KEY, open ? '1' : '0')
+    } catch {
+      /* storage unavailable */
+    }
+  }
 
   function lastFor(item: TrackedItem): Entry | undefined {
     return entries.find((e) => e.item_id === item.id)
@@ -136,13 +154,42 @@ export function Today() {
 
       <div className="card-grid">
         {shown.map((item) => {
+          const kind = kindOf(item)
+          if (kind === 'medication') {
+            // All medications live in one box, placed where the first one sits in the order
+            if (item.id !== meds[0].id) return null
+            const logged = meds.filter((m) => lastFor(m)).length
+            return (
+              <div key="medication-group" className={'med-group' + (medsOpen ? ' open' : '')}>
+                <button
+                  type="button"
+                  className="med-head"
+                  aria-expanded={medsOpen}
+                  onClick={() => toggleMeds(!medsOpen)}
+                >
+                  <span className="log-card-name">Medication</span>
+                  <span className="log-card-sub">
+                    {loadedDay !== today ? '\u00a0' : logged === 0 ? 'None logged yet today' : `${logged} of ${meds.length} logged today`}
+                  </span>
+                  <svg className="chevron" viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M6 9l6 6 6-6" />
+                  </svg>
+                </button>
+                {medsOpen && (
+                  <div className="med-list">
+                    {meds.map((m) => (
+                      <button key={m.id} type="button" className="med-btn" onClick={() => void tap(m)}>
+                        <span className="med-name">{m.name}</span>
+                        <span className="log-card-sub">{cardStatus(m)}</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )
+          }
           return (
-            <button
-              key={item.id}
-              type="button"
-              className={`log-card kind-${kindOf(item)}`}
-              onClick={() => void tap(item)}
-            >
+            <button key={item.id} type="button" className={`log-card kind-${kind}`} onClick={() => void tap(item)}>
               <span className="log-card-name">{item.name}</span>
               <span className="log-card-sub">{cardStatus(item)}</span>
             </button>
