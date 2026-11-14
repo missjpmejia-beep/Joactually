@@ -1,26 +1,35 @@
 import { useState } from 'react'
 import { useApp } from '../lib/app'
-import { deleteEntry, restoreEntry, updateEntry } from '../lib/data'
+import { updateEntry } from '../lib/data'
 import { dayKey, londonToUtc, timeOf } from '../lib/time'
 import type { Entry } from '../lib/types'
 import { RatingOptions } from './RatingOptions'
 import { Sheet } from './Sheet'
+import { EventSheet } from './EventSheet'
+import { SleepSheet } from './SleepSheet'
+import { useDeleteEntry } from './useDeleteEntry'
 
 /** Edit or delete any entry. Render with a `key` of the entry id so state resets per entry. */
-export function EntryEditor({ entry, onClose }: { entry: Entry | null; onClose: () => void }) {
+export function EntryEditor({ entry, onClose }: { entry: Entry; onClose: () => void }) {
+  const { itemsById } = useApp()
+  const item = itemsById.get(entry.item_id)
+  if (item?.type === 'event') return <EventSheet item={item} entry={entry} onClose={onClose} />
+  if (item?.type === 'period') return <SleepSheet item={item} entry={entry} onClose={onClose} />
+  return <RatingEditor entry={entry} onClose={onClose} />
+}
+
+function RatingEditor({ entry, onClose }: { entry: Entry; onClose: () => void }) {
   const { itemsById, showToast, entriesChanged } = useApp()
-  const item = entry ? itemsById.get(entry.item_id) : undefined
-  const [value, setValue] = useState<number | null>(entry?.value ?? null)
-  const [date, setDate] = useState(entry ? dayKey(entry.occurred_at) : '')
-  const [time, setTime] = useState(entry ? timeOf(entry.occurred_at) : '')
-  const [note, setNote] = useState(entry?.note ?? '')
+  const remove = useDeleteEntry()
+  const item = itemsById.get(entry.item_id)
+  const [value, setValue] = useState<number | null>(entry.value)
+  const [date, setDate] = useState(dayKey(entry.occurred_at))
+  const [time, setTime] = useState(timeOf(entry.occurred_at))
+  const [note, setNote] = useState(entry.note ?? '')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  if (!entry) return null
-
   async function save() {
-    if (!entry) return
     setBusy(true)
     setError(null)
     try {
@@ -39,28 +48,14 @@ export function EntryEditor({ entry, onClose }: { entry: Entry | null; onClose: 
     }
   }
 
-  async function remove() {
-    if (!entry) return
+  async function del() {
     setBusy(true)
     setError(null)
     try {
-      await deleteEntry(entry.id)
-      entriesChanged()
-      const id = entry.id
-      showToast(`${item?.name ?? 'Entry'} deleted`, [
-        {
-          label: 'Undo',
-          primary: true,
-          onClick: async () => {
-            await restoreEntry(id)
-            entriesChanged()
-          },
-        },
-      ])
+      await remove(entry)
       onClose()
     } catch (e) {
       setError((e as Error).message)
-    } finally {
       setBusy(false)
     }
   }
@@ -86,7 +81,7 @@ export function EntryEditor({ entry, onClose }: { entry: Entry | null; onClose: 
       </label>
       {error && <p className="error">{error}</p>}
       <div className="sheet-actions">
-        <button type="button" className="btn danger-text" onClick={remove} disabled={busy}>
+        <button type="button" className="btn danger-text" onClick={del} disabled={busy}>
           Delete
         </button>
         <span className="spacer" />

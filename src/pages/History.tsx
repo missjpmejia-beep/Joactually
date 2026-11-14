@@ -61,18 +61,17 @@ export function History() {
     return out
   }, [entries, searching, today, fromDay])
 
-  const filterable = items.filter((i) => i.type === 'rating' || i.shown)
 
   return (
     <div className="page">
       <h1>History</h1>
       <label className="field">
-        <span>Search notes</span>
+        <span>Search notes and meals</span>
         <input
           type="search"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="e.g. tired, work"
+          placeholder="e.g. pasta, tired, work"
         />
       </label>
 
@@ -80,7 +79,7 @@ export function History() {
         <button type="button" className={'chip' + (itemId === '' ? ' on' : '')} onClick={() => setItemId('')}>
           All
         </button>
-        {filterable.map((i) => (
+        {items.map((i) => (
           <button
             key={i.id}
             type="button"

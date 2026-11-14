@@ -695,3 +695,104 @@ section { margin-bottom: 8px; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }
 }
+
+/* ── Stage 2 ─────────────────────────────────────────────── */
+:root {
+  --event-bg: #eef1e6;
+  --event-border: #d3dcc2;
+  --sleep-bg: #efe6dc;
+  --sleep-border: #e0d2c2;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --event-bg: #262b1f;
+    --event-border: #3a4330;
+    --sleep-bg: #2e2620;
+    --sleep-border: #463a30;
+  }
+}
+:root[data-theme='dark'] {
+  --event-bg: #262b1f;
+  --event-border: #3a4330;
+  --sleep-bg: #2e2620;
+  --sleep-border: #463a30;
+}
+
+.log-card.kind-medication,
+.log-card.kind-event {
+  background: var(--event-bg);
+  border-color: var(--event-border);
+}
+
+.log-card.kind-sleep {
+  grid-column: 1 / -1;
+  min-height: 72px;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--sleep-bg);
+  border-color: var(--sleep-border);
+}
+
+.log-card.kind-sleep .log-card-sub { text-align: right; }
+
+.sleep-summary {
+  margin: -4px 0 14px;
+  font-weight: 500;
+  color: var(--green);
+}
+
+.quality-row {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.quality-btn {
+  min-height: 48px;
+  border-radius: 14px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  font-weight: 700;
+  font-size: 1.1rem;
+}
+
+.quality-btn.on {
+  border: 2px solid var(--accent);
+  background: var(--accent-soft);
+}
+
+.add-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.add-row .btn { padding: 12px 6px; }
+
+.kind-tag {
+  display: inline-block;
+  font-size: 0.72rem;
+  font-weight: 500;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--surface-2);
+  color: var(--muted);
+  vertical-align: 2px;
+}
+
+.sub-title {
+  font-size: 0.98rem;
+  margin: 18px 0 4px;
+}
+
+.no-top { margin-top: 0; }
+
+.btn.danger {
+  background: var(--danger);
+  color: var(--bg);
+}
+
+.btn.small.danger-text { padding-left: 8px; }

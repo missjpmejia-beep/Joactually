@@ -1,13 +1,15 @@
 import { useEffect, useState } from 'react'
 import { useApp } from '../lib/app'
-import { addRating, deleteEntry, fetchEntries } from '../lib/data'
+import { addEntry, addRating, deleteEntry, fetchEntries } from '../lib/data'
 import { dayKey, londonToUtc, longDay, timeOf, todayKey } from '../lib/time'
-import { isLoggable, type Entry, type TrackedItem } from '../lib/types'
+import { describeValue, formatAmount, formatDuration, kindOf, type Entry, type TrackedItem } from '../lib/types'
 import { RatingOptions, directionHint } from '../components/RatingOptions'
 import { Sheet } from '../components/Sheet'
 import { EntryList } from '../components/EntryList'
 import { EntryEditor } from '../components/EntryEditor'
 import { NoteSheet } from '../components/NoteSheet'
+import { EventSheet } from '../components/EventSheet'
+import { SleepSheet } from '../components/SleepSheet'
 
 export function Today() {
   const { items, itemsLoaded, itemsError, itemsById, showToast, entriesChanged, entriesVersion } = useApp()
@@ -47,20 +49,30 @@ export function Today() {
     }
   }, [today, entriesVersion])
 
-  const shown = items.filter((i) => i.shown && isLoggable(i))
+  const shown = items.filter((i) => i.shown)
 
   function lastFor(item: TrackedItem): Entry | undefined {
     return entries.find((e) => e.item_id === item.id)
   }
 
-  async function onSaved(entry: Entry) {
+  function onSaved(entry: Entry) {
     const item = itemsById.get(entry.item_id)
+    const kind = item ? kindOf(item) : 'rating'
     setFreshId(entry.id)
     entriesChanged()
-    const valueText = entry.value === 0 ? 'None' : String(entry.value)
+    const what =
+      kind === 'rating'
+        ? `${item?.name ?? 'Entry'} ${entry.value === 0 ? 'None' : entry.value} saved`
+        : kind === 'medication'
+          ? `${item?.name} ${describeValue(item, entry).toLowerCase()}`
+          : `${item?.name ?? 'Entry'} saved`
     const otherDay = dayKey(entry.occurred_at) !== todayKey()
-    showToast(`${item?.name ?? 'Entry'} ${valueText} saved${otherDay ? ` for ${longDay(dayKey(entry.occurred_at))}` : ''}`, [
-      { label: 'Add note', onClick: () => setNoting(entry) },
+    showToast(`${what}${otherDay ? ` for ${longDay(dayKey(entry.occurred_at))}` : ''}`, [
+      kind === 'medication'
+        ? { label: 'Change', onClick: () => setEditing(entry) }
+        : kind === 'rating'
+          ? { label: 'Add note', onClick: () => setNoting(entry) }
+          : null,
       {
         label: 'Undo',
         primary: true,
@@ -69,7 +81,42 @@ export function Today() {
           entriesChanged()
         },
       },
-    ])
+    ].filter((a) => a !== null))
+  }
+
+  async function tap(item: TrackedItem) {
+    if (kindOf(item) !== 'medication') {
+      setPicking(item)
+      return
+    }
+    // Medication: one tap logs the usual dose, taken now
+    try {
+      const entry = await addEntry({
+        item_id: item.id,
+        status: 'taken',
+        amount: item.default_amount,
+        unit: item.default_amount !== null ? item.default_unit : null,
+      })
+      onSaved(entry)
+    } catch (e) {
+      showToast(`Couldn’t save: ${(e as Error).message}`)
+    }
+  }
+
+  function cardStatus(item: TrackedItem): string {
+    if (loadedDay !== today) return '\u00a0'
+    const last = lastFor(item)
+    const kind = kindOf(item)
+    if (!last) return 'Not logged yet today'
+    const at = timeOf(last.occurred_at)
+    if (kind === 'rating') return `Last: ${last.value === 0 ? 'None' : last.value} at ${at}`
+    if (kind === 'medication') {
+      if (last.status === 'missed') return `Missed · ${at}`
+      const amt = formatAmount(last.amount, last.unit)
+      return `${amt ? amt + ' · ' : ''}taken ${at}`
+    }
+    if (kind === 'sleep' && last.start_at && last.end_at) return `Last night: ${formatDuration(last.start_at, last.end_at)}`
+    return `Last: ${at}`
   }
 
   return (
@@ -89,17 +136,15 @@ export function Today() {
 
       <div className="card-grid">
         {shown.map((item) => {
-          const last = lastFor(item)
           return (
-            <button key={item.id} type="button" className="log-card" onClick={() => setPicking(item)}>
+            <button
+              key={item.id}
+              type="button"
+              className={`log-card kind-${kindOf(item)}`}
+              onClick={() => void tap(item)}
+            >
               <span className="log-card-name">{item.name}</span>
-              <span className="log-card-sub">
-                {loadedDay !== today
-                  ? '\u00a0'
-                  : last
-                  ? `Last: ${last.value === 0 ? 'None' : last.value} at ${timeOf(last.occurred_at)}`
-                  : 'Not logged yet today'}
-              </span>
+              <span className="log-card-sub">{cardStatus(item)}</span>
             </button>
           )
         })}
@@ -114,14 +159,20 @@ export function Today() {
         </section>
       )}
 
-      {picking && (
+      {picking && picking.type === 'event' && (
+        <EventSheet key={picking.id} item={picking} onClose={() => setPicking(null)} onSaved={onSaved} />
+      )}
+      {picking && picking.type === 'period' && (
+        <SleepSheet key={picking.id} item={picking} onClose={() => setPicking(null)} onSaved={onSaved} />
+      )}
+      {picking && picking.type === 'rating' && (
         <RatingSheet
           key={picking.id}
           item={picking}
           onClose={() => setPicking(null)}
           onSaved={(e) => {
             setPicking(null)
-            void onSaved(e)
+            onSaved(e)
           }}
         />
       )}

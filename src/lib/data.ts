@@ -53,6 +53,12 @@ export async function updateItem(id: string, changes: Partial<TrackedItem>): Pro
 
 // ── Entries ──────────────────────────────────────────────────
 
+export type NewEntry = Partial<Omit<Entry, 'id' | 'recorded_at' | 'updated_at' | 'deleted_at'>> & { item_id: string }
+
+export async function addEntry(row: NewEntry): Promise<Entry> {
+  return check(await supabase.from('entries').insert(row).select().single())
+}
+
 export async function addRating(itemId: string, value: number, occurredAt?: string): Promise<Entry> {
   const row: Record<string, unknown> = { item_id: itemId, value }
   if (occurredAt) row.occurred_at = occurredAt
@@ -105,4 +111,54 @@ export async function searchEntries(text: string, itemId?: string): Promise<Entr
     .limit(500)
   if (itemId) q = q.eq('item_id', itemId)
   return check(await q)
+}
+
+// ── Recently deleted and permanent deletion ─────────────────
+
+const RECOVERY_DAYS = 30
+
+/** Entries deleted in the last 30 days. Anything older is permanently removed first. */
+export async function fetchRecentlyDeleted(): Promise<Entry[]> {
+  const cutoff = new Date(Date.now() - RECOVERY_DAYS * 86400_000).toISOString()
+  check(await supabase.from('entries').delete().lt('deleted_at', cutoff))
+  return check(
+    await supabase
+      .from('entries')
+      .select('*')
+      .not('deleted_at', 'is', null)
+      .order('deleted_at', { ascending: false })
+      .limit(1000),
+  )
+}
+
+export async function deleteForever(id: string): Promise<void> {
+  check(await supabase.from('entries').delete().eq('id', id).not('deleted_at', 'is', null))
+}
+
+export async function emptyRecentlyDeleted(): Promise<void> {
+  check(await supabase.from('entries').delete().not('deleted_at', 'is', null))
+}
+
+/** Permanently deletes every entry. Tracked items are kept. */
+export async function deleteAllEntries(): Promise<void> {
+  check(await supabase.from('entries').delete().not('id', 'is', null))
+}
+
+/** Every entry that hasn't been deleted, oldest first, in pages (for CSV export). */
+export async function fetchAllEntries(): Promise<Entry[]> {
+  const out: Entry[] = []
+  const size = 1000
+  for (let from = 0; ; from += size) {
+    const page: Entry[] = check(
+      await supabase
+        .from('entries')
+        .select('*')
+        .is('deleted_at', null)
+        .order('occurred_at', { ascending: true })
+        .order('id', { ascending: true })
+        .range(from, from + size - 1),
+    )
+    out.push(...page)
+    if (page.length < size) return out
+  }
 }
