@@ -33,7 +33,13 @@ const STARTERS: Partial<TrackedItem>[] = [
 ]
 
 export async function seedStarterItems(): Promise<void> {
-  const rows = STARTERS.map((s, i) => ({ ...s, sort_order: i }))
+  // Every row must have the same columns: in a multi-row insert, a missing
+  // column becomes null instead of using the database default.
+  const blank = {
+    shown: true, direction: null,
+    label_low: null, label_2: null, label_3: null, label_4: null, label_high: null,
+  }
+  const rows = STARTERS.map((s, i) => ({ ...blank, ...s, sort_order: i }))
   check(await supabase.from('tracked_items').insert(rows))
 }
 
