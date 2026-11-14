@@ -15,6 +15,7 @@ import { Today } from './pages/Today'
 import { History } from './pages/History'
 import { Patterns } from './pages/Patterns'
 import { Settings } from './pages/Settings'
+import { CritterSheet } from './pages/CritterSheet'
 
 applyTheme(getTheme())
 
@@ -48,6 +49,7 @@ function App() {
             <Route path="patterns" element={<Patterns />} />
             <Route path="history" element={<History />} />
             <Route path="settings" element={<Settings />} />
+            <Route path="critters" element={<CritterSheet />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Route>
         </Routes>

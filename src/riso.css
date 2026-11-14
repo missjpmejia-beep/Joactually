@@ -1,0 +1,69 @@
+/* ── Riso Critters ───────────────────────────────────────────
+   Scoped under .riso until Jo approves the critters. */
+.riso {
+  --paper: #F7F1E5;
+  --ink: #1F2A5C;
+  --riso-pink: #FF48B0;
+  --riso-blue: #0078BF;
+  --riso-yellow: #FFE800;
+  --riso-green: #00A95C;
+  --riso-orange: #FF6C2F;
+  --orange-text: #C24A00;
+  --sleep-lilac: #B49CFF;
+  --card: #FFFFFF;
+
+  color-scheme: light;
+  min-height: 100dvh;
+  color: var(--ink);
+  font-family: 'Rubik Variable', system-ui, sans-serif;
+  background-color: var(--paper);
+  background-image: radial-gradient(rgba(0, 120, 191, 0.10) 1.2px, transparent 1.6px);
+  background-size: 9px 9px;
+}
+
+.riso .display {
+  font-family: 'Bagel Fat One', system-ui, sans-serif;
+  font-weight: 400;
+}
+
+.riso .logo {
+  font-family: 'Bagel Fat One', system-ui, sans-serif;
+  font-size: 26px;
+  color: var(--riso-blue);
+  text-shadow: 3px 2px 0 rgba(255, 72, 176, 0.85);
+}
+
+.riso .r-card {
+  background: var(--card);
+  border: 2.5px solid var(--ink);
+  border-radius: 22px;
+  box-shadow: 4px 4px 0 var(--shadow, var(--riso-pink));
+}
+
+/* Test sheet */
+.critter-sheet {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 20px 16px 120px;
+}
+.critter-sheet h1 { margin: 12px 0 4px; font-size: 1.6rem; }
+.critter-sheet .intro { margin: 0 0 18px; font-weight: 500; }
+.critter-row { padding: 14px 12px 10px; margin-bottom: 18px; }
+.critter-row h2 { margin: 0 0 2px; font-size: 1.15rem; font-weight: 800; }
+.critter-row p { margin: 0 0 8px; font-size: 0.85rem; font-weight: 500; }
+.critter-row.dark { background-color: var(--ink); color: var(--paper);
+  background-image: radial-gradient(rgba(255, 232, 0, 0.5) 1px, transparent 1.4px); background-size: 14px 14px; }
+.critter-cells {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px 4px;
+}
+@media (min-width: 640px) { .critter-cells { grid-template-columns: repeat(6, minmax(0, 1fr)); } }
+.critter-cell { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.critter-cell span { font-size: 0.8rem; font-weight: 700; }
+.critter-cell .critter { width: 100%; max-width: 110px; height: auto; }
+
+@media (prefers-reduced-motion: no-preference) {
+  .riso .critter { transition: transform 0.2s; }
+  .riso .critter-cell:hover .critter { transform: rotate(-4deg) scale(1.05); }
+}
