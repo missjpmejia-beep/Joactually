@@ -239,7 +239,10 @@
 }
 
 /* ── Today ────────────────────────────────────────────────── */
-.r-today { position: relative; overflow-x: clip; }
+/* The corner circles hang off the top-right of the content area (the window edge),
+   not the centred column, so they look the same on a phone and a wide screen */
+.riso .main { position: relative; overflow-x: clip; }
+.r-today { position: static; }
 
 .r-blobs {
   position: absolute;
@@ -550,3 +553,9 @@
 /* Login */
 .login-hero { display: flex; align-items: center; gap: 10px; margin-bottom: 18px; }
 .login-hero .logo { margin: 0; font-size: 2rem; }
+
+/* Wide screens: the sidebar already shows the logo */
+@media (min-width: 900px) {
+  .r-header { justify-content: flex-end; }
+  .r-header .logo { display: none; }
+}
