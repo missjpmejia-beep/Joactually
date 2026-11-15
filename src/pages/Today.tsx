@@ -10,7 +10,7 @@ import { EntryEditor } from '../components/EntryEditor'
 import { NoteSheet } from '../components/NoteSheet'
 import { EventSheet } from '../components/EventSheet'
 import { SleepSheet } from '../components/SleepSheet'
-import { Critter } from '../components/Critter'
+import { ASLEEP, Critter } from '../components/Critter'
 import { bubbleCopy, critterFor, CRITTER_COLOUR } from '../lib/critters'
 
 const MEDS_OPEN_KEY = 'joactually.medsOpen'
@@ -258,7 +258,7 @@ export function Today() {
           }
           onClick={() => (asleep ? setWakingFrom(asleep) : void tap(item))}
         >
-          <Critter type="sleep" score={asleep ? 1 : (night?.quality ?? null)} logged={logged || Boolean(asleep)} size={84} />
+          <Critter type="sleep" score={night?.quality ?? null} logged={logged || Boolean(asleep)} face={asleep ? ASLEEP : undefined} size={84} />
           <span className="r-wide-text">
             <span className="r-label">{asleep ? 'Sleeping' : item.name}</span>
             <span className="r-sub">{sub}</span>

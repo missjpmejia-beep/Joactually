@@ -75,6 +75,8 @@ const FOOD_LOGGED: Face = { eyes: 'happy', mouth: 'yum', extras: ['cheeks'] }
 /** Meds once logged: too cool */
 const MEDS_LOGGED: Face = { eyes: 'shades', mouth: 'smile' }
 const SLEEP_WAITING: Face = { eyes: 'wink', mouth: 'flat' }
+/** Fast asleep right now: peaceful */
+export const ASLEEP: Face = { eyes: 'closed', mouth: 'softSmile' }
 
 export function faceFor(type: CritterType, score: number | null, logged: boolean): Face {
   if (type === 'food') return logged ? FOOD_LOGGED : NEUTRAL
@@ -273,6 +275,7 @@ export function Critter({
   logged = score !== null,
   size = 100,
   label,
+  face: faceOverride,
 }: {
   type: CritterType
   score: number | null
@@ -280,9 +283,11 @@ export function Critter({
   size?: number
   /** Give a label only for a critter that should be announced (the hero). */
   label?: string
+  /** Use this face instead of the one worked out from the score */
+  face?: Face
 }) {
   const body = CRITTERS[type]
-  const face = faceFor(type, score, logged)
+  const face = faceOverride ?? faceFor(type, score, logged)
   const faded = !logged && type !== 'sleep' && type !== 'food' && type !== 'meds'
   // Light mode overprints like real riso (multiply); dark mode sets --critter-blend to screen
   const blend = { mixBlendMode: (body.blend ?? 'var(--critter-blend, multiply)') as 'multiply' }
