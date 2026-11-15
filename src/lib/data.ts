@@ -30,6 +30,7 @@ const STARTERS: Partial<TrackedItem>[] = [
   },
   { name: 'Sleep', type: 'period', shown: false },
   { name: 'Meal', type: 'event', shown: false },
+  { name: 'Journal', type: 'journal' },
 ]
 
 export async function seedStarterItems(): Promise<void> {
@@ -49,6 +50,20 @@ export async function addItem(item: Partial<TrackedItem>): Promise<TrackedItem> 
 
 export async function updateItem(id: string, changes: Partial<TrackedItem>): Promise<void> {
   check(await supabase.from('tracked_items').update(changes).eq('id', id))
+}
+
+/** How many entries an item has, including ones in Recently deleted. */
+export async function countItemEntries(itemId: string): Promise<number> {
+  const res = await supabase.from('entries').select('id', { count: 'exact', head: true }).eq('item_id', itemId)
+  if (res.error) throw new Error(res.error.message)
+  return res.count ?? 0
+}
+
+/** Permanently deletes an item and every entry for it (Recently deleted included). */
+export async function deleteItemForever(itemId: string): Promise<void> {
+  // Entries first: the database won't remove an item that still has entries
+  check(await supabase.from('entries').delete().eq('item_id', itemId))
+  check(await supabase.from('tracked_items').delete().eq('id', itemId))
 }
 
 // ── Entries ──────────────────────────────────────────────────

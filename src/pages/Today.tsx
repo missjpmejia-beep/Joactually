@@ -10,6 +10,7 @@ import { EntryEditor } from '../components/EntryEditor'
 import { NoteSheet } from '../components/NoteSheet'
 import { EventSheet } from '../components/EventSheet'
 import { SleepSheet } from '../components/SleepSheet'
+import { JournalSheet } from '../components/JournalSheet'
 import { ASLEEP, Critter } from '../components/Critter'
 import { bubbleCopy, critterFor, CRITTER_COLOUR } from '../lib/critters'
 
@@ -98,7 +99,9 @@ export function Today() {
         ? `${item?.name ?? 'Entry'} ${entry.value === 0 ? 'None' : entry.value} saved`
         : kind === 'medication'
           ? `${item?.name} ${describeValue(item, entry).toLowerCase()}`
-          : `${item?.name ?? 'Entry'} saved`
+          : kind === 'journal'
+            ? `Written down. ${item?.name ?? 'Journal'} saved`
+            : `${item?.name ?? 'Entry'} saved`
     const otherDay = dayKey(entry.occurred_at) !== todayKey()
     showToast(`${what}${otherDay ? ` for ${longDay(dayKey(entry.occurred_at))}` : ''}`, [
       kind === 'medication'
@@ -282,6 +285,32 @@ export function Today() {
     )
   }
 
+  function journalCard(item: TrackedItem) {
+    const written = loaded ? entries.filter((e) => e.item_id === item.id) : []
+    const last = written[0]
+    let sub: string
+    if (!loaded) sub = '\u00a0'
+    else if (!last) sub = 'Whatever’s on your mind'
+    else if (written.length === 1) sub = `Written at ${timeOf(last.occurred_at)}`
+    else sub = `${written.length} entries today · last ${timeOf(last.occurred_at)}`
+    return (
+      <button
+        key={item.id}
+        type="button"
+        className={'r-journal' + (poppedItem === item.id ? ' pop' : '')}
+        aria-label={`${item.name}: ${sub}. Tap to write`}
+        onClick={() => setPicking(item)}
+      >
+        <Critter type="journal" score={null} logged={Boolean(last)} size={64} />
+        <span className="r-wide-text">
+          <span className="r-label">{item.name}</span>
+          <span className="r-sub">{sub}</span>
+        </span>
+        <span className="r-pill">Write</span>
+      </button>
+    )
+  }
+
   function medsCard() {
     const loggedMeds = meds.filter((m) => lastFor(m))
     const allLogged = loaded && loggedMeds.length === meds.length
@@ -359,6 +388,7 @@ export function Today() {
 
       {shown.filter((i) => kindOf(i) === 'sleep').map(sleepCard)}
       {meds.length > 0 && medsCard()}
+      {shown.filter((i) => kindOf(i) === 'journal').map(journalCard)}
 
       {entries.length > 0 && (
         <section>
@@ -374,6 +404,9 @@ export function Today() {
       )}
       {picking && picking.type === 'period' && (
         <SleepSheet key={picking.id} item={picking} onClose={() => setPicking(null)} onSaved={onSaved} />
+      )}
+      {picking && picking.type === 'journal' && (
+        <JournalSheet key={picking.id} item={picking} onClose={() => setPicking(null)} onSaved={onSaved} />
       )}
       {picking && picking.type === 'rating' && (
         <RatingSheet

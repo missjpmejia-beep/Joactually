@@ -7,6 +7,7 @@ const ROWS: { type: CritterType; title: string; note: string; scored: boolean; s
   { type: 'sleep', title: 'Sleep', note: 'Sleep quality · eyes open more as it goes up', scored: true, shadow: 'var(--riso-pink)' },
   { type: 'food', title: 'Food', note: 'Not logged / logged', scored: false, shadow: 'var(--riso-green)' },
   { type: 'meds', title: 'Meds', note: 'Not logged / logged', scored: false, shadow: 'var(--riso-green)' },
+  { type: 'journal', title: 'Journal', note: 'Nothing written / written', scored: false, shadow: 'var(--riso-blue)' },
 ]
 
 /** A test sheet showing every critter at every score, for Jo to approve. */

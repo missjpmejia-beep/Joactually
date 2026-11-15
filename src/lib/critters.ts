@@ -6,6 +6,7 @@ export function critterFor(item: TrackedItem): CritterType {
   const kind = kindOf(item)
   if (kind === 'sleep') return 'sleep'
   if (kind === 'medication') return 'meds'
+  if (kind === 'journal') return 'journal'
   if (kind === 'event') return 'food'
   const name = item.name.trim().toLowerCase()
   if (name === 'mood') return 'mood'
@@ -23,6 +24,7 @@ export const CRITTER_COLOUR: Record<CritterType, string> = {
   food: 'green',
   sleep: 'pink',
   meds: 'green',
+  journal: 'blue',
 }
 
 function opening(hour: number): string {
@@ -45,6 +47,8 @@ function nudge(item: TrackedItem): string {
  */
 export function bubbleCopy(hour: number, shown: TrackedItem[], isLogged: (i: TrackedItem) => boolean): string {
   const open = opening(hour)
+  // The journal is there when wanted, never something to "finish"
+  shown = shown.filter((i) => kindOf(i) !== 'journal')
   const waiting = shown.filter((i) => !isLogged(i))
   if (shown.length > 0 && waiting.length === shown.length) return `${open} Start with whatever’s easiest.`
   if (waiting.length === 0) return `${open} All logged. Go do something nice.`
@@ -63,7 +67,7 @@ export function entryCritter(item: TrackedItem | undefined, entry: {
   const type = critterFor(item)
   if (type === 'sleep') return { type, score: entry.quality, logged: true }
   if (type === 'meds') return { type, score: null, logged: entry.status !== 'missed' }
-  if (type === 'food') return { type, score: null, logged: true }
+  if (type === 'food' || type === 'journal') return { type, score: null, logged: true }
   // "None" on a symptom reads as calm
   return { type, score: entry.value === 0 ? 1 : entry.value, logged: true }
 }

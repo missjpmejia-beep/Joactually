@@ -260,6 +260,7 @@
 .r-grid,
 .r-sleep,
 .r-meds,
+.r-journal,
 .r-today > section,
 .r-today > .error,
 .r-today > .empty-box { position: relative; z-index: 1; }
@@ -394,6 +395,26 @@
 }
 .r-stamp.done { background: var(--riso-green); }
 
+/* Journal */
+.r-journal {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 64px;
+  margin-bottom: 14px;
+  padding: 8px 16px;
+  text-align: left;
+  color: var(--text);
+  background: var(--surface);
+  border: 2.5px solid var(--line);
+  border-radius: 22px;
+  box-shadow: 4px 4px 0 var(--riso-blue);
+}
+.r-journal .critter { flex: none; }
+.r-journal:active { transform: translate(2px, 2px); }
+.journal-text { min-height: 12em; line-height: 1.5; }
+
 /* Meds */
 .r-meds {
   margin-bottom: 14px;
@@ -516,22 +537,38 @@
 .riso .sub-title { font-weight: 800; }
 
 /* Entry rows get a mini critter */
-.riso .entry-row { grid-template-columns: 46px 34px minmax(0, 1fr); align-items: center; }
-/* Name and value share a line when they fit; a long value drops underneath */
+/* Stacked rows: name and time on top, what was logged underneath, then the note.
+   Everything reads left to right, so long names and meals just wrap. */
+.riso .entry-row {
+  grid-template-columns: 30px minmax(0, 1fr);
+  gap: 12px;
+  align-items: start;
+  padding: 12px 14px;
+}
 .entry-top {
   display: flex;
-  flex-wrap: wrap;
   align-items: baseline;
-  justify-content: space-between;
-  gap: 2px 12px;
+  gap: 10px;
   min-width: 0;
 }
 .entry-top .entry-name { flex: 1 1 auto; min-width: 0; overflow-wrap: break-word; }
-.entry-top .entry-value { flex: 0 1 auto; max-width: 100%; margin-left: auto; text-align: right; overflow-wrap: break-word; }
-.riso .entry-note { overflow-wrap: break-word; }
-.entry-critter { display: grid; place-items: center; }
-.entry-critter .critter { width: 34px; height: auto; }
-.riso .entry-name { font-weight: 700; }
+.riso .entry-time { flex: none; font-size: 0.85rem; padding-top: 0; }
+.riso .entry-value { text-align: left; font-size: 0.95rem; overflow-wrap: break-word; }
+.riso .entry-main { gap: 2px; }
+.riso .entry-note { font-size: 0.875rem; overflow-wrap: break-word; }
+.entry-critter { display: grid; place-items: center; padding-top: 2px; }
+.entry-critter .critter { width: 30px; height: auto; }
+.riso .entry-name { font-weight: 700; font-size: 1rem; line-height: 1.25; }
+/* Journal entries: the words themselves, a few lines' worth */
+.entry-journal {
+  white-space: pre-line;
+  overflow-wrap: break-word;
+  font-size: 0.95rem;
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
 
 /* Settings: each item shows its critter */
 .riso .item-row { flex-wrap: wrap; }

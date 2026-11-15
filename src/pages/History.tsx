@@ -67,7 +67,7 @@ export function History() {
     <div className="page">
       <h1><span className="marker">History</span></h1>
       <label className="field">
-        <span>Search notes and meals</span>
+        <span>Search notes, meals and journal</span>
         <input
           type="search"
           value={query}

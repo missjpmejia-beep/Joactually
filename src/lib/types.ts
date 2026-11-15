@@ -1,6 +1,6 @@
 import { timeOf } from './time'
 
-export type ItemType = 'rating' | 'event' | 'period'
+export type ItemType = 'rating' | 'event' | 'period' | 'journal'
 export type Direction = 'higher_is_better' | 'higher_is_worse'
 
 export interface TrackedItem {
@@ -21,11 +21,12 @@ export interface TrackedItem {
   default_unit: string | null
 }
 
-export type ItemKind = 'rating' | 'medication' | 'event' | 'sleep'
+export type ItemKind = 'rating' | 'medication' | 'event' | 'sleep' | 'journal'
 
 export function kindOf(item: TrackedItem): ItemKind {
   if (item.type === 'rating') return 'rating'
   if (item.type === 'period') return 'sleep'
+  if (item.type === 'journal') return 'journal'
   return item.is_medication ? 'medication' : 'event'
 }
 
@@ -81,6 +82,7 @@ export function formatAmount(amount: number | null, unit: string | null): string
 
 /** Short summary of any entry, e.g. "3 · Okay", "30 mg taken", "Pasta · large", "7 h 30 min · quality 4" */
 export function describeValue(item: TrackedItem | undefined, entry: Entry): string {
+  if (item?.type === 'journal') return entry.note ?? ''
   if (entry.start_at && !entry.end_at) return `Asleep since ${timeOf(entry.start_at)}`
   if (entry.start_at && entry.end_at) {
     const parts = [entry.is_nap ? `Nap · ${formatDuration(entry.start_at, entry.end_at)}` : formatDuration(entry.start_at, entry.end_at)]

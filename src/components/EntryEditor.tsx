@@ -7,6 +7,7 @@ import { RatingOptions } from './RatingOptions'
 import { Sheet } from './Sheet'
 import { EventSheet } from './EventSheet'
 import { SleepSheet } from './SleepSheet'
+import { JournalSheet } from './JournalSheet'
 import { useDeleteEntry } from './useDeleteEntry'
 
 /** Edit or delete any entry. Render with a `key` of the entry id so state resets per entry. */
@@ -15,6 +16,7 @@ export function EntryEditor({ entry, onClose }: { entry: Entry; onClose: () => v
   const item = itemsById.get(entry.item_id)
   if (item?.type === 'event') return <EventSheet item={item} entry={entry} onClose={onClose} />
   if (item?.type === 'period') return <SleepSheet item={item} entry={entry} onClose={onClose} />
+  if (item?.type === 'journal') return <JournalSheet item={item} entry={entry} onClose={onClose} />
   return <RatingEditor entry={entry} onClose={onClose} />
 }
 

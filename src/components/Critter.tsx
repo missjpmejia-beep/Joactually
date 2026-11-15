@@ -6,7 +6,7 @@ import type { ReactNode } from 'react'
  * Gentle on purpose: low scores look sad or worried, never grotesque. A mirror, not a judgement.
  */
 
-export type CritterType = 'mood' | 'anxiety' | 'energy' | 'food' | 'sleep' | 'meds'
+export type CritterType = 'mood' | 'anxiety' | 'energy' | 'food' | 'sleep' | 'meds' | 'journal'
 
 export const RISO = {
   paper: '#F7F1E5',
@@ -77,10 +77,14 @@ const MEDS_LOGGED: Face = { eyes: 'shades', mouth: 'smile' }
 const SLEEP_WAITING: Face = { eyes: 'wink', mouth: 'flat' }
 /** Fast asleep right now: peaceful */
 export const ASLEEP: Face = { eyes: 'closed', mouth: 'softSmile' }
+/** Journal: ready to listen, then pleased to have been told */
+const JOURNAL_WAITING: Face = { eyes: 'dot', mouth: 'softSmile' }
+const JOURNAL_LOGGED: Face = { eyes: 'happy', mouth: 'smallSmile', extras: ['cheeks'] }
 
 export function faceFor(type: CritterType, score: number | null, logged: boolean): Face {
   if (type === 'food') return logged ? FOOD_LOGGED : NEUTRAL
   if (type === 'meds') return logged ? MEDS_LOGGED : NEUTRAL
+  if (type === 'journal') return logged ? JOURNAL_LOGGED : JOURNAL_WAITING
   if (type === 'sleep' && !logged) return SLEEP_WAITING
   if (!logged || score === null || score < 1) return NEUTRAL
   return FACES[type][Math.min(5, Math.round(score)) as 1 | 2 | 3 | 4 | 5]
@@ -131,6 +135,10 @@ export const CRITTERS: Record<CritterType, Body> = {
   meds: {
     ink1: RISO.green, ink2: RISO.pink, ink2Opacity: 0.4, offset: [0, 0],
     shape: (f) => <rect x={8} y={30} width={104} height={50} rx={25} fill={f} />, faceInk: RISO.ink, cx: 60, cy: 54,
+  },
+  journal: {
+    ink1: RISO.blue, ink2: RISO.pink, ink2Opacity: 0.45, offset: [5, 4],
+    shape: (f) => <rect x={22} y={14} width={76} height={80} rx={14} fill={f} opacity={0.9} />, faceInk: RISO.paper, cx: 60, cy: 58,
   },
 }
 
@@ -288,7 +296,7 @@ export function Critter({
 }) {
   const body = CRITTERS[type]
   const face = faceOverride ?? faceFor(type, score, logged)
-  const faded = !logged && type !== 'sleep' && type !== 'food' && type !== 'meds'
+  const faded = !logged && type !== 'sleep' && type !== 'food' && type !== 'meds' && type !== 'journal'
   // Light mode overprints like real riso (multiply); dark mode sets --critter-blend to screen
   const blend = { mixBlendMode: (body.blend ?? 'var(--critter-blend, multiply)') as 'multiply' }
   return (
@@ -317,11 +325,18 @@ export function Critter({
       {type === 'food' && (
         <path d="M46 34 q-4 -8 0 -16 M60 34 q-4 -8 0 -16 M74 34 q-4 -8 0 -16" fill="none" stroke={RISO.pink} strokeWidth={2.5} strokeLinecap="round" />
       )}
+      {type === 'journal' && (
+        <g fill="none" stroke={RISO.ink} strokeWidth={3} strokeLinecap="round">
+          {[38, 54, 70, 86].map((x) => (
+            <path key={x} d={`M${x - 2} 20 v-8 a4 4 0 0 1 8 0 v4`} />
+          ))}
+        </g>
+      )}
       {type === 'sleep' && !logged && (
         <path d="M16 20 q6 -8 12 -2" fill="none" stroke={RISO.yellow} strokeWidth={3} strokeLinecap="round" />
       )}
       {extras(face.extras, body.cx, body.cy)}
-      {eyes(face.eyes, body.cx, body.cy, body.faceInk, type === 'anxiety' ? RISO.blue : RISO.paper)}
+      {eyes(face.eyes, body.cx, body.cy, body.faceInk, type === 'anxiety' || type === 'journal' ? RISO.blue : RISO.paper)}
       {mouth(face.mouth, body.cx, body.cy, body.faceInk)}
     </svg>
   )

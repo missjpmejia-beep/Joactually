@@ -39,12 +39,14 @@ Two tables, both with RLS (`user_id = auth.uid()` for select/insert/update/delet
 
 A trigger `check_entry()` enforces that each entry suits its item type. Sleep's `occurred_at` = `end_at` (date of waking). A sleep with `start_at` and no `end_at` is **in progress** (sleep timer); a partial unique index allows one open sleep per user. App queries exclude open sleeps from lists and CSV.
 
-**Migrations Jo has run in the Supabase SQL editor, in order:** `supabase/schema.sql` → `supabase/002_stage2.sql` → `supabase/003_sleep_timer_and_naps.sql`. New schema changes go in a new numbered file. Jo pastes it in, so give her the GitHub link and wait for "success" **before** pushing code that depends on it.
+**Migrations Jo has run in the Supabase SQL editor, in order:** `supabase/schema.sql` → `supabase/002_stage2.sql` → `supabase/003_sleep_timer_and_naps.sql`. **Pending:** `supabase/004_journal.sql` (adds `type = 'journal'`; journal text lives in `entries.note`; inserts a Journal item for existing accounts). New schema changes go in a new numbered file. Jo pastes it in, so give her the GitHub link and wait for "success" **before** pushing code that depends on it.
 
-Starter items: Mood, Anxiety, Energy (ratings), Sleep (period), Meal (event). Created on first login by `seedStarterItems()` in `src/lib/data.ts`.
+Starter items: Mood, Anxiety, Energy (ratings), Sleep (period), Meal (event), Journal (journal). Created on first login by `seedStarterItems()` in `src/lib/data.ts`.
 
 ## Features built
 - **Today:** hero Mood critter + rule-based speech bubble; critter tiles for ratings and events showing "Good · 10:12" (Jo's own scale word + time); Sleep card with **"Going to sleep" / "I'm awake"** timer (wake sheet guesses Nap vs Night's sleep: daytime start and under 4 h = nap); **Meds** grouped in one collapsible box (one tap logs the usual dose; Change/Undo after); "Today so far" list.
+- **Journal** card on Today (below Meds): big text box, draft kept on the device if the sheet is closed. Never nudged in the speech bubble. Shows in History (first 4 lines) and is searchable.
+- **Delete an item:** Settings → Edit → Delete. Unused items go straight away; items with entries need the name typed, and delete their entries for good (offers Hide instead). Sleep and Journal can only be hidden.
 - Toast after every save: Undo, plus Add note (ratings) or Change (medication).
 - **History:** every day shown including empty days ("Nothing logged. That's fine."), filter by item, search notes and descriptions, edit/delete any entry; mini critter per entry.
 - **Settings:** one ordered list of all items (up/down, hide/show, edit), add rating/medication/event, appearance (light/dark/match device), My data (CSV export in UK time, Recently deleted, delete everything with typed confirmation), change password, sign out.

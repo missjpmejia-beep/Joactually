@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useApp } from '../lib/app'
-import { addItem, updateItem } from '../lib/data'
+import { addItem, countItemEntries, deleteItemForever, updateItem } from '../lib/data'
 import { supabase } from '../lib/supabase'
 import { getTheme, setTheme, type ThemeChoice } from '../lib/theme'
 import { formatAmount, kindOf, type Direction, type ItemKind, type TrackedItem } from '../lib/types'
@@ -14,6 +14,7 @@ const KIND_LABEL: Record<ItemKind, string> = {
   medication: 'Medication',
   event: 'Event',
   sleep: 'Sleep',
+  journal: 'Journal',
 }
 
 function summary(item: TrackedItem): string {
@@ -27,13 +28,14 @@ function summary(item: TrackedItem): string {
     return dose ? `Medication · usual dose ${dose}` : 'Medication'
   }
   if (kind === 'sleep') return 'Bedtime, wake time and quality'
+  if (kind === 'journal') return 'Free writing, as much or little as you like'
   return item.default_unit ? `Event · measured in ${item.default_unit}` : 'Event · description and size'
 }
 
-type Editing = TrackedItem | { new: Exclude<ItemKind, 'sleep'> } | null
+type Editing = TrackedItem | { new: 'rating' | 'medication' | 'event' } | null
 
 export function Settings() {
-  const { items, reloadItems, showToast } = useApp()
+  const { items, reloadItems, showToast, entriesChanged } = useApp()
   const [editing, setEditing] = useState<Editing>(null)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -145,6 +147,16 @@ export function Settings() {
             await reloadItems()
             showToast(`${name} saved`)
           }}
+          onDeleted={async (name) => {
+            setEditing(null)
+            await reloadItems()
+            entriesChanged()
+            showToast(`${name} deleted`)
+          }}
+          onHide={(it) => {
+            setEditing(null)
+            if (it.shown) toggleShown(it)
+          }}
         />
       )}
     </div>
@@ -157,12 +169,16 @@ function ItemEditor({
   nextOrder,
   onClose,
   onSaved,
+  onDeleted,
+  onHide,
 }: {
   item: TrackedItem | null
   kind: ItemKind
   nextOrder: number
   onClose: () => void
   onSaved: (name: string) => void
+  onDeleted: (name: string) => void
+  onHide: (item: TrackedItem) => void
 }) {
   const [name, setName] = useState(item?.name ?? '')
   const [direction, setDirection] = useState<Direction>(item?.direction ?? 'higher_is_better')
@@ -178,6 +194,8 @@ function ItemEditor({
   const [unit, setUnit] = useState(item?.default_unit ?? '')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  /** null = not deleting; a number = confirming, with that many entries at stake */
+  const [deleteCount, setDeleteCount] = useState<number | null>(null)
 
   const clean = (s: string) => (s.trim() ? s.trim() : null)
   const amt = amount.trim() === '' ? null : Number(amount.replace(',', '.'))
@@ -222,8 +240,37 @@ function ItemEditor({
     }
   }
 
+  async function startDelete() {
+    if (!item) return
+    setBusy(true)
+    setError(null)
+    try {
+      setDeleteCount(await countItemEntries(item.id))
+    } catch (e) {
+      setError((e as Error).message)
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  if (item && deleteCount !== null) {
+    return (
+      <DeleteItem
+        item={item}
+        count={deleteCount}
+        onBack={() => setDeleteCount(null)}
+        onClose={onClose}
+        onDeleted={() => onDeleted(item.name)}
+        onHide={() => onHide(item)}
+      />
+    )
+  }
+
+  // There's only one Sleep and one Journal, and no way to add them back, so they can only be hidden
+  const deletable = item && kind !== 'sleep' && kind !== 'journal'
+
   const title = item ? `Edit ${item.name}` : `Add ${KIND_LABEL[kind].toLowerCase()}`
-  const placeholder = { rating: 'e.g. Headache', medication: 'e.g. Sertraline', event: 'e.g. Caffeine', sleep: '' }[kind]
+  const placeholder = { rating: 'e.g. Headache', medication: 'e.g. Sertraline', event: 'e.g. Caffeine', sleep: '', journal: '' }[kind]
 
   return (
     <Sheet open onClose={onClose} title={title}>
@@ -300,12 +347,88 @@ function ItemEditor({
       {!amountOk && <p className="error">Usual dose needs to be a number.</p>}
       {error && <p className="error">{error}</p>}
       <div className="sheet-actions">
+        {deletable && (
+          <button type="button" className="btn danger-text" onClick={startDelete} disabled={busy}>
+            Delete
+          </button>
+        )}
         <span className="spacer" />
         <button type="button" className="btn ghost" onClick={onClose} disabled={busy}>
           Cancel
         </button>
         <button type="button" className="btn primary" onClick={save} disabled={busy || !valid}>
           Save
+        </button>
+      </div>
+    </Sheet>
+  )
+}
+
+function DeleteItem({
+  item,
+  count,
+  onBack,
+  onClose,
+  onDeleted,
+  onHide,
+}: {
+  item: TrackedItem
+  count: number
+  onBack: () => void
+  onClose: () => void
+  onDeleted: () => void
+  onHide: () => void
+}) {
+  const [typed, setTyped] = useState('')
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const confirmed = count === 0 || typed.trim().toLowerCase() === item.name.trim().toLowerCase()
+
+  async function del() {
+    setBusy(true)
+    setError(null)
+    try {
+      await deleteItemForever(item.id)
+      onDeleted()
+    } catch (e) {
+      setError((e as Error).message)
+      setBusy(false)
+    }
+  }
+
+  return (
+    <Sheet open onClose={onClose} title={`Delete ${item.name}?`}>
+      {count === 0 ? (
+        <p>It’s never been logged, so nothing else goes with it.</p>
+      ) : (
+        <>
+          <p>
+            This also deletes <strong>{count === 1 ? '1 entry' : `${count} entries`}</strong> for {item.name}, for good.
+            They won’t go to Recently deleted and can’t be brought back.
+          </p>
+          <p className="muted small">
+            Want to keep them? <strong>Hide</strong> takes it off Today but keeps its history. Or download your CSV
+            first (Settings → My data).
+          </p>
+          <label className="field">
+            <span>Type “{item.name}” to confirm</span>
+            <input value={typed} onChange={(e) => setTyped(e.target.value)} autoComplete="off" />
+          </label>
+        </>
+      )}
+      {error && <p className="error">{error}</p>}
+      <div className="sheet-actions">
+        <button type="button" className="btn ghost" onClick={onBack} disabled={busy}>
+          Back
+        </button>
+        <span className="spacer" />
+        {count > 0 && item.shown && (
+          <button type="button" className="btn ghost" onClick={onHide} disabled={busy}>
+            Hide instead
+          </button>
+        )}
+        <button type="button" className="btn danger" onClick={del} disabled={busy || !confirmed}>
+          Delete
         </button>
       </div>
     </Sheet>
