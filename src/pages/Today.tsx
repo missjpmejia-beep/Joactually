@@ -48,22 +48,12 @@ export function Today() {
   }, [])
   useEffect(() => {
     let cancelled = false
-    fetchOpenSleep()
-      .then((e) => !cancelled && setOpenSleep(e))
-      .catch(() => {
-        /* before the sleep-timer database update this simply finds nothing */
-      })
-    return () => {
-      cancelled = true
-    }
-  }, [entriesVersion])
-
-  useEffect(() => {
-    let cancelled = false
-    fetchEntries({ fromDay: today, toDay: today })
-      .then((list) => {
+    // Fetch today's entries and any sleep in progress together, so the Sleep card changes in one step
+    Promise.all([fetchEntries({ fromDay: today, toDay: today }), fetchOpenSleep().catch(() => null)])
+      .then(([list, open]) => {
         if (!cancelled) {
           setEntries(list)
+          setOpenSleep(open)
           setLoadedDay(today)
           setLoadError(null)
         }
@@ -401,7 +391,6 @@ export function Today() {
             entry={wakingFrom}
             onClose={() => setWakingFrom(null)}
             onSaved={() => {
-              setOpenSleep(null)
               setPoppedItem(sleepItem.id)
               window.setTimeout(() => setPoppedItem(null), 700)
             }}
