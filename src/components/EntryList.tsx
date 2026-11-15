@@ -30,10 +30,12 @@ export function EntryList({
                 <Critter {...entryCritter(item, e)} size={34} />
               </span>
               <span className="entry-main">
-                <span className="entry-name">{item?.name ?? 'Unknown'}</span>
+                <span className="entry-top">
+                  <span className="entry-name">{item?.name ?? 'Unknown'}</span>
+                  <span className="entry-value">{describeValue(item, e)}</span>
+                </span>
                 {e.note && <span className="entry-note">Note: {e.note}</span>}
               </span>
-              <span className="entry-value">{describeValue(item, e)}</span>
             </button>
           </li>
         )

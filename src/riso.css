@@ -513,7 +513,19 @@
 .riso .sub-title { font-weight: 800; }
 
 /* Entry rows get a mini critter */
-.riso .entry-row { grid-template-columns: 46px 34px minmax(0, 1fr) auto; align-items: center; }
+.riso .entry-row { grid-template-columns: 46px 34px minmax(0, 1fr); align-items: center; }
+/* Name and value share a line when they fit; a long value drops underneath */
+.entry-top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 2px 12px;
+  min-width: 0;
+}
+.entry-top .entry-name { flex: 1 1 auto; min-width: 0; overflow-wrap: break-word; }
+.entry-top .entry-value { flex: 0 1 auto; max-width: 100%; margin-left: auto; text-align: right; overflow-wrap: break-word; }
+.riso .entry-note { overflow-wrap: break-word; }
 .entry-critter { display: grid; place-items: center; }
 .entry-critter .critter { width: 34px; height: auto; }
 .riso .entry-name { font-weight: 700; }
