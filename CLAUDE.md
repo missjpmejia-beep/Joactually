@@ -39,7 +39,7 @@ Two tables, both with RLS (`user_id = auth.uid()` for select/insert/update/delet
 
 A trigger `check_entry()` enforces that each entry suits its item type. Sleep's `occurred_at` = `end_at` (date of waking). A sleep with `start_at` and no `end_at` is **in progress** (sleep timer); a partial unique index allows one open sleep per user. App queries exclude open sleeps from lists and CSV.
 
-**Migrations Jo has run in the Supabase SQL editor, in order:** `supabase/schema.sql` → `supabase/002_stage2.sql` → `supabase/003_sleep_timer_and_naps.sql`. **Pending:** `supabase/004_journal.sql` (adds `type = 'journal'`; journal text lives in `entries.note`; inserts a Journal item for existing accounts). New schema changes go in a new numbered file. Jo pastes it in, so give her the GitHub link and wait for "success" **before** pushing code that depends on it.
+**Migrations Jo has run in the Supabase SQL editor, in order:** `supabase/schema.sql` → `supabase/002_stage2.sql` → `supabase/003_sleep_timer_and_naps.sql` → `supabase/004_journal.sql` (adds `type = 'journal'`; journal text lives in `entries.note`; inserts a Journal item for existing accounts). New schema changes go in a new numbered file. Jo pastes it in, so give her the GitHub link and wait for "success" **before** pushing code that depends on it.
 
 Starter items: Mood, Anxiety, Energy (ratings), Sleep (period), Meal (event), Journal (journal). Created on first login by `seedStarterItems()` in `src/lib/data.ts`.
 
