@@ -602,3 +602,16 @@
   .r-sleep.asleep .critter { animation: snooze 3.5s ease-in-out infinite; transform-origin: 50% 80%; }
   @keyframes snooze { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.04, 0.97); } }
 }
+
+/* Calmer cards on phones: less text, smaller critters */
+.r-grid { gap: 12px; }
+.r-tile { padding: 10px 12px 12px; gap: 2px; }
+.r-tile .critter { height: 68px; }
+.r-label { font-size: 18px; }
+.r-reading-line { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 6px; }
+.r-reading-line .r-reading { font-size: 1.05rem; }
+.r-at { font-size: 13px; font-weight: 500; color: var(--muted); }
+.r-sleep .r-label { font-size: 19px; }
+.r-sleep-main { gap: 10px; }
+.r-sleep .r-stamp { max-width: 92px; min-height: 44px; font-size: 13.5px; padding: 8px 10px; }
+.r-sleep .r-sub { font-size: 13.5px; }

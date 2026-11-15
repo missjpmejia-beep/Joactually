@@ -176,12 +176,12 @@ export function Today() {
       const v = last.value ?? 0
       const words = v === 0 ? null : labelFor(item, v)
       reading = v === 0 ? 'None' : (words ?? `${v} out of 5`)
-      sub = `Last logged ${at}` + (words ? ` · ${v}\u00a0of\u00a05` : '')
+      sub = ''
       aria = `${item.name}: ${reading}${words ? `, ${v} out of 5` : ''}, last logged ${at}`
     } else if (kind === 'event') {
       right = logged ? <span className="r-pill done">{item.name === 'Meal' ? 'Fed' : 'Done'}</span> : <span className="r-pill">Log</span>
       if (logged && last) {
-        sub = `${last.description || (item.name === 'Meal' ? 'Last bite' : 'Last')} · ${at}`
+        sub = `at ${at}`
         aria = `${item.name}, logged ${at}`
       }
     }
@@ -198,8 +198,13 @@ export function Today() {
           <span className="r-label">{item.name}</span>
           {right}
         </span>
-        {reading && <span className={`r-reading c-${colour}`}>{reading}</span>}
-        <span className="r-sub">{sub}</span>
+        {reading && (
+          <span className="r-reading-line">
+            <span className={`r-reading c-${colour}`}>{reading}</span>
+            <span className="r-at">· {at}</span>
+          </span>
+        )}
+        {sub && <span className="r-sub">{sub}</span>}
       </button>
     )
   }
@@ -241,10 +246,10 @@ export function Today() {
 
     let sub: string
     if (!loaded) sub = '\u00a0'
-    else if (asleep) sub = `Asleep since ${timeOf(asleep.start_at!)} · ${formatDuration(asleep.start_at!, nowTick)}`
+    else if (asleep) sub = `Since ${timeOf(asleep.start_at!)} · ${formatDuration(asleep.start_at!, nowTick)}`
     else if (night) sub = [`Last night: ${formatDuration(night.start_at!, night.end_at!)}`, napText].filter(Boolean).join(' · ')
     else if (naps.length) sub = `No night’s sleep logged · ${napText}`
-    else sub = 'Tap “Going to sleep” at bedtime'
+    else sub = 'Not logged yet'
 
     return (
       <div key={item.id} className={'r-sleep' + (asleep ? ' asleep' : '') + (poppedItem === item.id ? ' pop' : '')}>
@@ -258,7 +263,7 @@ export function Today() {
           }
           onClick={() => (asleep ? setWakingFrom(asleep) : void tap(item))}
         >
-          <Critter type="sleep" score={night?.quality ?? null} logged={logged || Boolean(asleep)} face={asleep ? ASLEEP : undefined} size={84} />
+          <Critter type="sleep" score={night?.quality ?? null} logged={logged || Boolean(asleep)} face={asleep ? ASLEEP : undefined} size={64} />
           <span className="r-wide-text">
             <span className="r-label">{asleep ? 'Sleeping' : item.name}</span>
             <span className="r-sub">{sub}</span>
