@@ -59,6 +59,30 @@ export async function addEntry(row: NewEntry): Promise<Entry> {
   return check(await supabase.from('entries').insert(row).select().single())
 }
 
+// ── Sleep timer ──────────────────────────────────────────────
+
+/** Everything except a sleep that's still in progress (it has a start but no end yet). */
+const FINISHED = 'start_at.is.null,end_at.not.is.null'
+
+/** The sleep currently in progress, if any. */
+export async function fetchOpenSleep(): Promise<Entry | null> {
+  const res = await supabase
+    .from('entries')
+    .select('*')
+    .is('deleted_at', null)
+    .not('start_at', 'is', null)
+    .is('end_at', null)
+    .limit(1)
+    .maybeSingle()
+  if (res.error) throw new Error(res.error.message)
+  return res.data as Entry | null
+}
+
+/** "Going to sleep": saves a sleep with a start and no end. */
+export async function startSleep(itemId: string): Promise<Entry> {
+  return addEntry({ item_id: itemId, start_at: new Date().toISOString() })
+}
+
 export async function addRating(itemId: string, value: number, occurredAt?: string): Promise<Entry> {
   const row: Record<string, unknown> = { item_id: itemId, value }
   if (occurredAt) row.occurred_at = occurredAt
@@ -91,6 +115,7 @@ export async function fetchEntries(opts: {
     .is('deleted_at', null)
     .gte('occurred_at', startOfDayUtc(opts.fromDay))
     .lt('occurred_at', startOfDayUtc(addDays(opts.toDay, 1)))
+    .or(FINISHED)
     .order('occurred_at', { ascending: false })
     .limit(2000)
   if (opts.itemId) q = q.eq('item_id', opts.itemId)
@@ -154,6 +179,7 @@ export async function fetchAllEntries(): Promise<Entry[]> {
         .from('entries')
         .select('*')
         .is('deleted_at', null)
+        .or(FINISHED)
         .order('occurred_at', { ascending: true })
         .order('id', { ascending: true })
         .range(from, from + size - 1),

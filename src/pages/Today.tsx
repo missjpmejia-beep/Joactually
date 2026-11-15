@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useApp } from '../lib/app'
-import { addEntry, addRating, deleteEntry, fetchEntries } from '../lib/data'
+import { addEntry, addRating, deleteEntry, fetchEntries, fetchOpenSleep, startSleep } from '../lib/data'
 import { dateChip, dayKey, londonToUtc, longDay, timeOf, todayKey } from '../lib/time'
 import { describeValue, formatAmount, formatDuration, kindOf, labelFor, type Entry, type TrackedItem } from '../lib/types'
 import { RatingOptions, directionHint } from '../components/RatingOptions'
@@ -37,6 +37,26 @@ export function Today() {
       document.removeEventListener('visibilitychange', onShow)
     }
   }, [])
+
+  // The sleep in progress, if any, and a clock so its timer ticks
+  const [openSleep, setOpenSleep] = useState<Entry | null>(null)
+  const [wakingFrom, setWakingFrom] = useState<Entry | null>(null)
+  const [nowTick, setNowTick] = useState(() => new Date().toISOString())
+  useEffect(() => {
+    const t = window.setInterval(() => setNowTick(new Date().toISOString()), 30_000)
+    return () => window.clearInterval(t)
+  }, [])
+  useEffect(() => {
+    let cancelled = false
+    fetchOpenSleep()
+      .then((e) => !cancelled && setOpenSleep(e))
+      .catch(() => {
+        /* before the sleep-timer database update this simply finds nothing */
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [entriesVersion])
 
   useEffect(() => {
     let cancelled = false
@@ -194,26 +214,76 @@ export function Today() {
     )
   }
 
+  async function goToSleep(item: TrackedItem) {
+    try {
+      const e = await startSleep(item.id)
+      setOpenSleep(e)
+      entriesChanged()
+      showToast(`Asleep from ${timeOf(e.start_at!)}. Night night.`, [
+        {
+          label: 'Undo',
+          primary: true,
+          onClick: async () => {
+            await deleteEntry(e.id)
+            setOpenSleep(null)
+            entriesChanged()
+          },
+        },
+      ])
+    } catch (err) {
+      const msg = (err as Error).message
+      showToast(
+        /period needs a start and end/i.test(msg)
+          ? 'The sleep timer needs the database update first (003_sleep_timer_and_naps.sql).'
+          : `Couldn’t start: ${msg}`,
+      )
+    }
+  }
+
   function sleepCard(item: TrackedItem) {
-    const last = lastFor(item)
-    const logged = loaded && Boolean(last?.start_at && last?.end_at)
-    const dur = logged && last?.start_at && last?.end_at ? formatDuration(last.start_at, last.end_at) : ''
-    const sub = !loaded ? '\u00a0' : logged ? `Last night: ${dur}${last?.quality ? ` · quality ${last.quality}/5` : ''}` : 'This one’s still waiting for you'
+    const todays = loaded ? entries.filter((e) => e.item_id === item.id && e.start_at && e.end_at) : []
+    const night = todays.find((e) => !e.is_nap)
+    const naps = todays.filter((e) => e.is_nap)
+    const napMins = naps.reduce((m, e) => m + (new Date(e.end_at!).getTime() - new Date(e.start_at!).getTime()) / 60000, 0)
+    const napText = naps.length ? `nap ${formatDuration('1970-01-01T00:00:00Z', new Date(napMins * 60000).toISOString())}` : ''
+    const asleep = openSleep && openSleep.item_id === item.id ? openSleep : null
+    const logged = Boolean(night)
+
+    let sub: string
+    if (!loaded) sub = '\u00a0'
+    else if (asleep) sub = `Asleep since ${timeOf(asleep.start_at!)} · ${formatDuration(asleep.start_at!, nowTick)}`
+    else if (night) sub = [`Last night: ${formatDuration(night.start_at!, night.end_at!)}`, napText].filter(Boolean).join(' · ')
+    else if (naps.length) sub = `No night’s sleep logged · ${napText}`
+    else sub = 'Tap “Going to sleep” at bedtime'
+
     return (
-      <button
-        key={item.id}
-        type="button"
-        className={'r-sleep' + (poppedItem === item.id ? ' pop' : '')}
-        aria-label={logged ? `${item.name}, ${dur}, logged` : `${item.name}, not logged today, tap to log`}
-        onClick={() => void tap(item)}
-      >
-        <Critter type="sleep" score={last?.quality ?? null} logged={logged} size={84} />
-        <span className="r-wide-text">
-          <span className="r-label">{item.name}</span>
-          <span className="r-sub">{sub}</span>
-        </span>
-        <span className={'r-stamp display' + (logged ? ' done' : '')}>{logged ? 'Done' : 'Log'}</span>
-      </button>
+      <div key={item.id} className={'r-sleep' + (asleep ? ' asleep' : '') + (poppedItem === item.id ? ' pop' : '')}>
+        <button
+          type="button"
+          className="r-sleep-main"
+          aria-label={
+            asleep
+              ? `${item.name}: asleep since ${timeOf(asleep.start_at!)}. Tap to wake up`
+              : `${item.name}: ${sub}. Tap to log a sleep by hand`
+          }
+          onClick={() => (asleep ? setWakingFrom(asleep) : void tap(item))}
+        >
+          <Critter type="sleep" score={asleep ? 1 : (night?.quality ?? null)} logged={logged || Boolean(asleep)} size={84} />
+          <span className="r-wide-text">
+            <span className="r-label">{asleep ? 'Sleeping' : item.name}</span>
+            <span className="r-sub">{sub}</span>
+          </span>
+        </button>
+        {loaded && (
+          <button
+            type="button"
+            className={'r-stamp display' + (asleep ? ' wake' : '')}
+            onClick={() => (asleep ? setWakingFrom(asleep) : void goToSleep(item))}
+          >
+            {asleep ? 'I’m awake' : 'Going to sleep'}
+          </button>
+        )}
+      </div>
     )
   }
 
@@ -322,6 +392,22 @@ export function Today() {
         />
       )}
       {editing && <EntryEditor key={editing.id} entry={editing} onClose={() => setEditing(null)} />}
+      {wakingFrom && (() => {
+        const sleepItem = itemsById.get(wakingFrom.item_id)
+        return sleepItem ? (
+          <SleepSheet
+            key={'wake-' + wakingFrom.id}
+            item={sleepItem}
+            entry={wakingFrom}
+            onClose={() => setWakingFrom(null)}
+            onSaved={() => {
+              setOpenSleep(null)
+              setPoppedItem(sleepItem.id)
+              window.setTimeout(() => setPoppedItem(null), 700)
+            }}
+          />
+        ) : null
+      })()}
       {noting && <NoteSheet key={noting.id} entry={noting} onClose={() => setNoting(null)} />}
     </div>
   )

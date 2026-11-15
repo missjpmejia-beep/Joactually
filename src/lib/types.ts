@@ -1,3 +1,5 @@
+import { timeOf } from './time'
+
 export type ItemType = 'rating' | 'event' | 'period'
 export type Direction = 'higher_is_better' | 'higher_is_worse'
 
@@ -42,6 +44,8 @@ export interface Entry {
   end_at: string | null
   quality: number | null
   interrupted: boolean | null
+  /** Sleep only: a nap rather than night sleep */
+  is_nap?: boolean
   note: string | null
   recorded_at: string
   updated_at: string
@@ -77,8 +81,9 @@ export function formatAmount(amount: number | null, unit: string | null): string
 
 /** Short summary of any entry, e.g. "3 · Okay", "30 mg taken", "Pasta · large", "7 h 30 min · quality 4" */
 export function describeValue(item: TrackedItem | undefined, entry: Entry): string {
+  if (entry.start_at && !entry.end_at) return `Asleep since ${timeOf(entry.start_at)}`
   if (entry.start_at && entry.end_at) {
-    const parts = [formatDuration(entry.start_at, entry.end_at)]
+    const parts = [entry.is_nap ? `Nap · ${formatDuration(entry.start_at, entry.end_at)}` : formatDuration(entry.start_at, entry.end_at)]
     if (entry.quality) parts.push(`quality ${entry.quality}`)
     if (entry.interrupted) parts.push('woke in night')
     return parts.join(' · ')

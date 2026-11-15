@@ -567,3 +567,38 @@
   line-height: 1.2;
   overflow-wrap: break-word;
 }
+
+/* Sleep card: tap the card to log by hand, tap the stamp to start or stop the timer */
+.r-sleep { padding: 10px 12px 10px 16px; }
+.r-sleep-main {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex: 1;
+  min-width: 0;
+  padding: 4px 0;
+  min-height: 64px;
+  text-align: left;
+  color: inherit;
+  background: none;
+  border: 0;
+}
+.r-sleep-main .critter { flex: none; }
+.r-sleep .r-stamp {
+  max-width: 108px;
+  min-height: 52px;
+  font-size: 15px;
+  line-height: 1.1;
+  text-align: center;
+  border: 2px solid var(--ink);
+  box-shadow: 2px 2px 0 var(--ink);
+}
+.r-sleep .r-stamp:active { transform: rotate(-4deg) translate(2px, 2px); box-shadow: none; }
+.r-sleep .r-stamp.wake { background: var(--riso-pink); }
+.r-sleep.asleep { box-shadow: 4px 4px 0 var(--sleep-lilac); }
+.r-sleep:active { transform: none; }
+.r-sleep-main:active .critter { transform: scale(0.96); }
+@media (prefers-reduced-motion: no-preference) {
+  .r-sleep.asleep .critter { animation: snooze 3.5s ease-in-out infinite; transform-origin: 50% 80%; }
+  @keyframes snooze { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.04, 0.97); } }
+}
