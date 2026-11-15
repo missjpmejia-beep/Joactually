@@ -158,13 +158,16 @@ export function Today() {
     const colour = CRITTER_COLOUR[type]
     const at = last ? timeOf(last.occurred_at) : ''
     let right: React.ReactNode = null
+    let reading: string | null = null
     let sub = loaded ? 'Tap to log' : '\u00a0'
     let aria = `${item.name}, not logged today, tap to log`
     if (kind === 'rating' && logged && last) {
-      const words = last.value === 0 ? 'None' : labelFor(item, last.value ?? 0)
-      right = <span className={`r-score display c-${colour}`}>{last.value === 0 ? 'None' : `${last.value}/5`}</span>
-      sub = [words, at].filter(Boolean).join(' · ')
-      aria = `${item.name}, ${last.value === 0 ? 'none' : `${last.value} out of 5`}, logged ${at}`
+      // Lead with Jo's own words; the number is a quiet extra
+      const v = last.value ?? 0
+      const words = v === 0 ? null : labelFor(item, v)
+      reading = v === 0 ? 'None' : (words ?? `${v} out of 5`)
+      sub = `Last logged ${at}` + (words ? ` · ${v}\u00a0of\u00a05` : '')
+      aria = `${item.name}: ${reading}${words ? `, ${v} out of 5` : ''}, last logged ${at}`
     } else if (kind === 'event') {
       right = logged ? <span className="r-pill done">{item.name === 'Meal' ? 'Fed' : 'Done'}</span> : <span className="r-pill">Log</span>
       if (logged && last) {
@@ -185,6 +188,7 @@ export function Today() {
           <span className="r-label">{item.name}</span>
           {right}
         </span>
+        {reading && <span className={`r-reading c-${colour}`}>{reading}</span>}
         <span className="r-sub">{sub}</span>
       </button>
     )
@@ -217,7 +221,7 @@ export function Today() {
     const loggedMeds = meds.filter((m) => lastFor(m))
     const allLogged = loaded && loggedMeds.length === meds.length
     const allTaken = allLogged && loggedMeds.every((m) => lastFor(m)?.status === 'taken')
-    const pill = !loaded ? null : allTaken ? 'All taken' : allLogged ? 'All logged' : loggedMeds.length ? `${loggedMeds.length} of ${meds.length}` : 'Log'
+    const pill = !loaded ? null : allTaken ? 'All taken' : allLogged ? 'All logged' : loggedMeds.length ? `${loggedMeds.length} of ${meds.length} logged` : 'Log'
     return (
       <div key="medication-group" className={'r-meds' + (medsOpen ? ' open' : '') + (poppedItem === 'medication-group' ? ' pop' : '')}>
         <button

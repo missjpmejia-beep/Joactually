@@ -559,3 +559,11 @@
   .r-header { justify-content: flex-end; }
   .r-header .logo { display: none; }
 }
+
+/* Rating tiles: the latest reading in Jo's own words */
+.r-reading {
+  font-size: 1.15rem;
+  font-weight: 800;
+  line-height: 1.2;
+  overflow-wrap: break-word;
+}
