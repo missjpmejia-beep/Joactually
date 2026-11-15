@@ -213,26 +213,27 @@
 }
 .riso .toast-btn.primary { background: var(--riso-yellow); color: var(--ink); border-color: var(--riso-yellow); }
 
-/* Bottom nav: a floating bar */
+/* Bottom nav: docked to the bottom edge, filling down past the phone's gesture bar */
 .riso .nav {
-  left: 12px;
-  right: 12px;
-  bottom: calc(12px + env(safe-area-inset-bottom));
-  padding: 6px;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 6px 10px calc(6px + env(safe-area-inset-bottom));
   gap: 4px;
   background: var(--surface);
-  border: 2.5px solid var(--line);
-  border-radius: 24px;
-  box-shadow: 4px 4px 0 var(--riso-blue);
+  border: 0;
+  border-top: 2.5px solid var(--line);
+  border-radius: 22px 22px 0 0;
+  box-shadow: 0 -4px 0 var(--riso-blue);
 }
 .riso .nav-link { border-radius: 18px; padding: 8px 0; min-height: 44px; color: var(--text); font-weight: 600; }
 .riso .nav-link svg { width: 24px; height: 24px; padding: 0; stroke-width: 2.3; }
 .riso .nav-link.active { background: var(--riso-pink); color: var(--ink); font-weight: 800; }
 .riso .nav-link.active svg { background: none; }
-.riso .main { padding-bottom: calc(110px + env(safe-area-inset-bottom)); }
-.riso .toast { bottom: calc(96px + env(safe-area-inset-bottom)); }
+.riso .main { padding-bottom: calc(104px + env(safe-area-inset-bottom)); }
+.riso .toast { bottom: calc(92px + env(safe-area-inset-bottom)); }
 @media (min-width: 900px) {
-  .riso .nav { left: auto; right: auto; bottom: auto; top: 16px; margin: 16px; height: calc(100dvh - 64px); }
+  .riso .nav { left: auto; right: auto; bottom: auto; top: 16px; margin: 16px; height: calc(100dvh - 64px); padding: 6px; border: 2.5px solid var(--line); border-radius: 24px; box-shadow: 4px 4px 0 var(--riso-blue); }
   .riso .nav-brand { font-family: 'Bagel Fat One', system-ui, sans-serif; font-weight: 400; color: var(--logo); text-shadow: 2px 2px 0 rgba(255, 72, 176, 0.85); }
   .riso .nav-link { flex-direction: row; padding: 10px 12px; }
   .riso .toast { bottom: 24px; }
